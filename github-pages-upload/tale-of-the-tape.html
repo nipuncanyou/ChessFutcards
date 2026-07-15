@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tale of the Tape — who's actually better at what?</title>
+<style>
+  :root{
+    --bg:#FAFAF7; --panel:#FFFFFF; --panel2:#F3F1E8; --line:#E6E4DA;
+    --ink:#101010; --muted:#6d6d66; --a:#00A851; --b:#2E6BFF; --even:#8b8a80;
+    --agreen:#00D364;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:16px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  ::selection{background:var(--agreen);color:var(--ink)}
+  .wrap{max-width:840px;margin:0 auto;padding:30px 20px 70px}
+  header h1{font-size:34px;margin:0;letter-spacing:.04em;font-weight:900}
+  header h1 .vs{color:var(--a)}
+  header p{color:var(--muted);margin:6px 0 0;font-size:15px}
+  header a{color:var(--ink);font-weight:700}
+  .controls{display:flex;gap:12px;flex-wrap:wrap;margin:26px 0 8px;align-items:center}
+  select{background:#fff;color:var(--ink);border:2px solid var(--ink);border-radius:12px;
+    padding:10px 14px;font-size:16px;font-weight:700}
+  select:focus{outline:none;box-shadow:3px 3px 0 var(--agreen)}
+  .nerd{margin-left:auto;display:flex;align-items:center;gap:8px;color:var(--muted);
+    font-size:13.5px;cursor:pointer;user-select:none;font-weight:700}
+  .nerd input{accent-color:var(--a)}
+  .summary{background:var(--panel);border:2px solid var(--ink);border-radius:16px;
+    padding:20px 22px;margin:20px 0 28px;box-shadow:7px 7px 0 var(--agreen)}
+  .summary h2{margin:0 0 10px;font-size:13px;letter-spacing:.22em;color:var(--muted);
+    text-transform:uppercase}
+  .summary .line{display:flex;gap:10px;margin:9px 0;font-size:16.5px}
+  .dot{flex:0 0 10px;height:10px;border-radius:50%;margin-top:8px}
+  .dot.a{background:var(--a)} .dot.b{background:var(--b)} .dot.even{background:var(--even)}
+  .card{background:var(--panel);border:1.5px solid var(--line);border-radius:16px;
+    padding:18px 20px;margin:14px 0;box-shadow:0 2px 0 var(--line)}
+  .card h3{margin:0;font-size:19px;font-weight:900}
+  .pill{display:inline-block;border-radius:99px;padding:3px 12px;font-size:13px;
+    font-weight:800;margin:8px 0 14px}
+  .pill.a{background:rgba(0,168,81,.12);color:var(--a)}
+  .pill.b{background:rgba(46,107,255,.12);color:var(--b)}
+  .pill.even{background:rgba(139,138,128,.16);color:var(--even)}
+  .row{display:grid;grid-template-columns:110px 1fr 110px;gap:10px;align-items:center;margin:8px 0}
+  .row .who{font-size:14.5px;color:var(--muted);font-weight:700}
+  .track{position:relative;height:26px;background:var(--panel2);border-radius:7px;
+    overflow:hidden;border:1px solid var(--line)}
+  .bar{position:absolute;top:0;left:0;height:100%;border-radius:6px;opacity:.95}
+  .bar.a{background:linear-gradient(90deg,#7fe0ae,var(--a))}
+  .bar.b{background:linear-gradient(90deg,#9db9ff,var(--b))}
+  .ci{position:absolute;top:11px;height:4px;background:rgba(16,16,16,.55);border-radius:2px;display:none}
+  .val{text-align:right;font-weight:800;font-size:16px;font-variant-numeric:tabular-nums}
+  .val small{display:block;font-weight:500;color:var(--muted);font-size:11px;visibility:hidden}
+  .plain{color:var(--muted);font-size:13.5px;margin:10px 0 0}
+  .foot{font-size:12.5px;color:var(--muted);border-top:1px dashed var(--line);
+    margin-top:12px;padding-top:9px;display:none}
+  .foot b{color:#8a6a1c}
+  body.nerd-on .ci{display:block}
+  body.nerd-on .val small{visibility:visible}
+  body.nerd-on .foot{display:block}
+  body.nerd-on .card.nerd-only{display:block}
+  .card.nerd-only{display:none}
+  .meta{color:var(--muted);font-size:13px;margin:10px 0 0;display:none}
+  body.nerd-on .meta{display:block}
+  .method{margin-top:34px;font-size:14px;color:#4c4c46;display:none}
+  body.nerd-on .method{display:block}
+  .method h2{font-size:17px;color:var(--ink)}
+  footer{margin-top:36px;color:var(--muted);font-size:12.5px;border-top:1px solid var(--line);padding-top:14px}
+  a{color:var(--b)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>TALE <span class="vs">of the</span> TAPE</h1>
+    <p>Pick two players. Get the honest answer. Stats only if you ask for them. · <a href="index.html">← make your own card</a></p>
+  </header>
+
+  <div class="controls">
+    <select id="pa"></select>
+    <span style="color:var(--muted)">vs</span>
+    <select id="pb"></select>
+    <label class="nerd"><input type="checkbox" id="nerd"> show the stats</label>
+  </div>
+  <div class="meta" id="meta"></div>
+
+  <div class="summary">
+    <h2>The short version</h2>
+    <div id="verdicts"></div>
+  </div>
+
+  <div id="cards"></div>
+
+  <section class="method">
+    <h2>Methodology (v0)</h2>
+    <p><b>Corpus.</b> OTB classical games from Lichess broadcasts of major events
+    (Candidates, world championship, Norway Chess, Tata Steel Masters, Grand Chess Tour,
+    Olympiad, Grand Swiss and similar), Jan 2024 onward. Clock data confirms classical play;
+    rapid/blitz/armageddon segments are excluded.</p>
+    <p><b>Prep depth</b> = first move with a think over 5 minutes (median). It's a proxy: fast play
+    can mean preparation or familiar ground by habit. <b>Opening pace</b> = % of starting clock left
+    after move 15, normalized per game. <b>Time trouble</b> = share of moves 20–40 played with
+    under 5 minutes. <b>Variety</b> = Shannon entropy over the first 10 plies, normalized by the
+    maximum possible for that sample size (raw entropy comparisons are biased when players have
+    different game counts; that's also why it has no CI — naive bootstrap entropy is biased low).</p>
+    <p><b>"Clear edge" vs "about even":</b> a difference is called clear only when the bootstrap
+    95% confidence intervals (1,000 resamples) don't overlap. Overlapping intervals mean the data
+    can't separate the players — saying so is the honest answer, not a cop-out.</p>
+    <p><b>Coming in v1:</b> engine accuracy by phase, blunder timing under clock pressure,
+    conversion/save rates, Masters-database book depth, more players.</p>
+  </section>
+
+  <footer>
+    Data: <a href="https://lichess.org/broadcast">Lichess broadcasts</a> ·
+    portfolio project · v0 · <span id="gen"></span>
+  </footer>
+</div>
+
+<script>
+window.TOTT_DATA = {"generated_at": "2026-07-15", "corpus": {"games": 286, "events": ["2026 Norway Chess Open", "45th FIDE Chess Olympiad", "American Cup Upper Bracket", "FIDE Candidates 2024", "FIDE Candidates Tournament 2026", "FIDE Grand Swiss 2025", "FIDE World Championship Match 2024", "Masters", "Norway Chess", "Norway Chess 2025", "Sinquefield Cup", "Superbet Chess Classic Romania", "Tata Steel Chess Masters", "Tata Steel Chess Tournament 2025 Masters", "Tata Steel Masters 2024"], "date_range": ["2024.01.13", "2026.05.24"]}, "players": {"carlsen": {"name": "Magnus Carlsen", "all": {"n": 38, "n_clock": 38, "open_speed": {"value": 67.6, "ci": [57.22, 72.23]}, "prep_horizon": {"value": 9.0, "ci": [7.5, 11.0]}, "time_pressure": {"value": 14.7, "ci": [7.95, 21.28]}, "breadth": {"value": 5.14, "ci": null}, "score": {"value": 59.2, "ci": [47.37, 69.74]}, "decisive": {"value": 55.3, "ci": [39.47, 71.05]}, "game_len": {"value": 98.0, "ci": [80.0, 109.5]}, "opp_elo": {"value": 2735.0, "ci": [2709.55, 2755.68]}, "distinct_lines": 36}, "white": {"n": 19, "n_clock": 19, "open_speed": {"value": 68.2, "ci": [54.2, 81.8]}, "prep_horizon": {"value": 11, "ci": [8, 14]}, "time_pressure": {"value": 17.8, "ci": [7.25, 29.33]}, "breadth": {"value": 4.25, "ci": null}, "score": {"value": 65.8, "ci": [50.0, 81.58]}, "decisive": {"value": 63.2, "ci": [42.11, 84.21]}, "game_len": {"value": 103, "ci": [83, 116]}, "opp_elo": {"value": 2737.0, "ci": [2700.47, 2765.53]}, "distinct_lines": 19}, "black": {"n": 19, "n_clock": 19, "open_speed": {"value": 67.6, "ci": [54.16, 72.23]}, "prep_horizon": {"value": 8, "ci": [6, 10]}, "time_pressure": {"value": 11.4, "ci": [4.72, 18.56]}, "breadth": {"value": 4.14, "ci": null}, "score": {"value": 52.6, "ci": [36.84, 68.42]}, "decisive": {"value": 47.4, "ci": [26.32, 68.42]}, "game_len": {"value": 84, "ci": [73, 107]}, "opp_elo": {"value": 2733.0, "ci": [2694.32, 2764.32]}, "distinct_lines": 18}}, "caruana": {"name": "Fabiano Caruana", "all": {"n": 101, "n_clock": 101, "open_speed": {"value": 67.8, "ci": [63.07, 76.79]}, "prep_horizon": {"value": 11, "ci": [10, 12]}, "time_pressure": {"value": 16.3, "ci": [11.64, 21.44]}, "breadth": {"value": 6.47, "ci": null}, "score": {"value": 55.4, "ci": [49.5, 61.88]}, "decisive": {"value": 40.6, "ci": [31.68, 50.5]}, "game_len": {"value": 87, "ci": [80, 94]}, "opp_elo": {"value": 2738.0, "ci": [2727.87, 2748.49]}, "distinct_lines": 92}, "white": {"n": 50, "n_clock": 50, "open_speed": {"value": 68.7, "ci": [60.23, 78.11]}, "prep_horizon": {"value": 11.0, "ci": [10.0, 12.5]}, "time_pressure": {"value": 19.0, "ci": [11.71, 27.11]}, "breadth": {"value": 5.39, "ci": null}, "score": {"value": 62.0, "ci": [53.0, 70.0]}, "decisive": {"value": 44.0, "ci": [30.0, 58.0]}, "game_len": {"value": 92.0, "ci": [85.0, 100.0]}, "opp_elo": {"value": 2735.0, "ci": [2720.3, 2748.42]}, "distinct_lines": 44}, "black": {"n": 51, "n_clock": 51, "open_speed": {"value": 67.2, "ci": [60.18, 80.18]}, "prep_horizon": {"value": 11, "ci": [9, 12]}, "time_pressure": {"value": 13.3, "ci": [7.89, 18.83]}, "breadth": {"value": 5.59, "ci": null}, "score": {"value": 49.0, "ci": [40.2, 57.84]}, "decisive": {"value": 37.3, "ci": [23.53, 50.98]}, "game_len": {"value": 80, "ci": [69, 91]}, "opp_elo": {"value": 2740.0, "ci": [2724.94, 2753.9]}, "distinct_lines": 49}}, "nakamura": {"name": "Hikaru Nakamura", "all": {"n": 45, "n_clock": 45, "open_speed": {"value": 72.6, "ci": [66.47, 77.0]}, "prep_horizon": {"value": 12, "ci": [11, 13]}, "time_pressure": {"value": 4.5, "ci": [1.61, 8.22]}, "breadth": {"value": 5.25, "ci": null}, "score": {"value": 55.6, "ci": [46.67, 64.44]}, "decisive": {"value": 33.3, "ci": [20.0, 48.89]}, "game_len": {"value": 81, "ci": [70, 101]}, "opp_elo": {"value": 2758.0, "ci": [2744.53, 2770.51]}, "distinct_lines": 40}, "white": {"n": 23, "n_clock": 23, "open_speed": {"value": 73.3, "ci": [69.02, 82.97]}, "prep_horizon": {"value": 11, "ci": [10, 14]}, "time_pressure": {"value": 2.2, "ci": [0.0, 5.03]}, "breadth": {"value": 4.32, "ci": null}, "score": {"value": 58.7, "ci": [47.83, 69.57]}, "decisive": {"value": 34.8, "ci": [17.39, 56.52]}, "game_len": {"value": 81, "ci": [64, 103]}, "opp_elo": {"value": 2757.0, "ci": [2738.22, 2773.35]}, "distinct_lines": 21}, "black": {"n": 22, "n_clock": 22, "open_speed": {"value": 67.1, "ci": [60.62, 77.0]}, "prep_horizon": {"value": 12.0, "ci": [11.0, 13.5]}, "time_pressure": {"value": 6.6, "ci": [1.28, 13.73]}, "breadth": {"value": 4.19, "ci": null}, "score": {"value": 52.3, "ci": [40.91, 63.64]}, "decisive": {"value": 31.8, "ci": [13.64, 50.0]}, "game_len": {"value": 81.0, "ci": [70.5, 108.0]}, "opp_elo": {"value": 2758.0, "ci": [2739.36, 2776.41]}, "distinct_lines": 19}}, "gukesh": {"name": "Gukesh Dommaraju", "all": {"n": 135, "n_clock": 135, "open_speed": {"value": 66.4, "ci": [61.33, 69.67]}, "prep_horizon": {"value": 10, "ci": [10, 11]}, "time_pressure": {"value": 16.4, "ci": [13.19, 20.07]}, "breadth": {"value": 6.78, "ci": null}, "score": {"value": 56.3, "ci": [50.74, 62.22]}, "decisive": {"value": 49.6, "ci": [41.48, 57.78]}, "game_len": {"value": 90, "ci": [84, 99]}, "opp_elo": {"value": 2727.0, "ci": [2716.36, 2737.48]}, "distinct_lines": 119}, "white": {"n": 68, "n_clock": 68, "open_speed": {"value": 63.9, "ci": [59.56, 75.1]}, "prep_horizon": {"value": 10.0, "ci": [9.0, 11.0]}, "time_pressure": {"value": 19.4, "ci": [14.21, 25.36]}, "breadth": {"value": 5.94, "ci": null}, "score": {"value": 59.6, "ci": [52.94, 67.65]}, "decisive": {"value": 42.6, "ci": [30.88, 54.41]}, "game_len": {"value": 84.0, "ci": [80.0, 97.0]}, "opp_elo": {"value": 2735.0, "ci": [2718.94, 2748.19]}, "distinct_lines": 64}, "black": {"n": 67, "n_clock": 67, "open_speed": {"value": 67.4, "ci": [61.05, 70.85]}, "prep_horizon": {"value": 10, "ci": [9, 11]}, "time_pressure": {"value": 13.4, "ci": [9.11, 17.74]}, "breadth": {"value": 5.73, "ci": null}, "score": {"value": 53.0, "ci": [44.03, 61.94]}, "decisive": {"value": 56.7, "ci": [44.78, 67.16]}, "game_len": {"value": 94, "ci": [87, 103]}, "opp_elo": {"value": 2720.0, "ci": [2705.03, 2733.75]}, "distinct_lines": 58}}}};
+</script>
+<script>
+const SHORT = {carlsen:"Carlsen", caruana:"Caruana", nakamura:"Nakamura", gukesh:"Gukesh"};
+const D = window.TOTT_DATA;
+const $ = id => document.getElementById(id);
+if (!D) $("cards").innerHTML = "<p>No data — run pipeline/metrics.py first.</p>";
+
+const CARDS = [
+  {key:"prep_horizon", q:"Who stays in prep mode longer?",
+   plain:"When does each player first stop and think for more than 5 minutes? Later = cruising on preparation (or very familiar ground) for longer.",
+   fmt:v => v >= 41 ? "move 40+" : "move " + Math.round(v),
+   dir:"higher", win:w => `${w} keeps moving quickly deeper into the game`,
+   conf:"Fast play can be deep prep or a narrow, well-known repertoire — this can't tell them apart."},
+  {key:"open_speed", q:"Who plays the opening faster?",
+   plain:"How much of the clock is left after 15 moves? More left = faster, more confident opening play.",
+   fmt:v => Math.round(v) + "% left", dir:"higher",
+   win:w => `${w} burns less clock getting out of the opening`,
+   conf:"Event increment schemes differ slightly; read the direction, not the decimals."},
+  {key:"time_pressure", q:"Who gets into time trouble?",
+   plain:"How often are moves 20–40 played with under 5 minutes on the clock? Lower = calmer clock handling.",
+   fmt:v => Math.round(v) + "% of moves", dir:"lower",
+   win:w => `${w} stays out of time trouble far more`,
+   conf:"Some players deliberately invest time — and play well in the scramble anyway."},
+  {key:"breadth", q:"Who's harder to prepare against?",
+   plain:"How much do they vary their openings? 100% = never repeats a line, 0% = same line every game. Adjusted for how many games each player has.",
+   fmt:v => Math.round(v) + "% variety", dir:"desc", norm:true,
+   win:w => `${w} mixes openings noticeably more`,
+   conf:"Variety is a style, not a virtue: narrow can mean deep, wide can mean unpredictable."},
+  {key:"score", q:"Who scores better?",
+   plain:"Points per game across these events, all opposition included.",
+   fmt:v => Math.round(v) + "% of points", dir:"higher",
+   win:w => `${w} scores better in this corpus`,
+   conf:"Opposition strength differs by event mix — check average opponent rating below in stats mode."},
+  {key:"decisive", q:"Who fights hardest?", nerdOnly:true,
+   plain:"Share of games that end decisively (win or loss) rather than in a draw.",
+   fmt:v => Math.round(v) + "% decisive", dir:"desc",
+   win:w => `${w} plays more decisive games`, conf:"Style and tournament situation both drive this."},
+  {key:"game_len", q:"Who grinds longer?", nerdOnly:true,
+   plain:"Median game length.",
+   fmt:v => Math.round(v / 2) + " moves", dir:"desc",
+   win:w => `${w}'s games run longer`, conf:null},
+  {key:"opp_elo", q:"Against whom? (context)", nerdOnly:true,
+   plain:"Average opponent rating behind all the numbers above.",
+   fmt:v => Math.round(v) + " Elo", dir:"desc", min:true,
+   win:w => `${w} faced stronger opposition on average`, conf:null},
+];
+
+function stat(p, c){ // value + ci for a card, with breadth normalization
+  const m = p.all[c.key];
+  if (!c.norm) return {v: m.value, ci: m.ci};
+  const hmax = Math.log2(Math.max(2, p.all.n));
+  return {v: m.value == null ? null : 100 * m.value / hmax, ci: null};
+}
+
+function verdict(c, A, B){
+  const a = stat(A, c), b = stat(B, c);
+  if (a.v == null || b.v == null) return {cls:"even", text:"Not enough data."};
+  const clear = a.ci && b.ci && (a.ci[0] > b.ci[1] || b.ci[0] > a.ci[1]);
+  const gap = c.norm && Math.abs(a.v - b.v) > 8; // breadth has no CI; need a big gap
+  if (!clear && !gap) return {cls:"even", text:"About even — the data can't separate them."};
+  let aWins = a.v > b.v;
+  if (c.dir === "lower") aWins = !aWins;
+  const w = aWins ? SHORT[$("pa").value] : SHORT[$("pb").value];
+  return {cls: aWins ? "a" : "b", text: c.win(w) + "."};
+}
+
+function bar(c, s, cls, name, n){
+  const vals = [s.v, ...(s.ci || [])].filter(x => x != null);
+  return {html: (axMin, axMax) => {
+    const span = axMax - axMin || 1;
+    const pct = x => Math.max(2, Math.min(100, 100 * (x - axMin) / span));
+    const ci = s.ci ? `<div class="ci" style="left:${pct(s.ci[0])}%;width:${Math.max(1, pct(s.ci[1]) - pct(s.ci[0]))}%"></div>` : "";
+    return `<div class="row"><div class="who">${name}</div>
+      <div class="track"><div class="bar ${cls}" style="width:${s.v == null ? 0 : pct(s.v)}%"></div>${ci}</div>
+      <div class="val">${s.v == null ? "—" : c.fmt(s.v)}<small>n=${n} · 95% CI shown</small></div></div>`;
+  }, vals};
+}
+
+function render(){
+  const ka = $("pa").value, kb = $("pb").value;
+  const A = D.players[ka], B = D.players[kb];
+  $("meta").textContent = `${D.corpus.games} classical games ingested · ` +
+    `${D.corpus.date_range[0]} → ${D.corpus.date_range[1]} · ` +
+    `${SHORT[ka]}: ${A.all.n} games · ${SHORT[kb]}: ${B.all.n} games · all with clock data`;
+
+  $("verdicts").innerHTML = CARDS.filter(c => !c.nerdOnly).map(c => {
+    const v = verdict(c, A, B);
+    return `<div class="line"><span class="dot ${v.cls}"></span><span>${v.text}</span></div>`;
+  }).join("");
+
+  $("cards").innerHTML = CARDS.map(c => {
+    const v = verdict(c, A, B);
+    const ba = bar(c, stat(A, c), "a", SHORT[ka], A.all.n);
+    const bb = bar(c, stat(B, c), "b", SHORT[kb], B.all.n);
+    const all = [...ba.vals, ...bb.vals];
+    if (!all.length) return "";
+    const axMax = Math.max(...all) * 1.12;
+    const axMin = c.min ? Math.min(...all) - 40 : 0;
+    const pillText = v.cls === "even" ? "about even" :
+      "edge: " + (v.cls === "a" ? SHORT[ka] : SHORT[kb]);
+    return `<div class="card ${c.nerdOnly ? "nerd-only" : ""}">
+      <h3>${c.q}</h3>
+      <span class="pill ${v.cls}">${pillText}</span>
+      ${ba.html(axMin, axMax)}${bb.html(axMin, axMax)}
+      <p class="plain">${c.plain}</p>
+      ${c.conf ? `<div class="foot"><b>Read with care:</b> ${c.conf}</div>` : ""}
+    </div>`;
+  }).join("");
+}
+
+if (D){
+  $("gen").textContent = "data generated " + D.generated_at;
+  const keys = Object.keys(D.players);
+  for (const id of ["pa", "pb"])
+    $(id).innerHTML = keys.map(k =>
+      `<option value="${k}">${D.players[k].name}</option>`).join("");
+  $("pa").value = keys.includes("caruana") ? "caruana" : keys[0];
+  $("pb").value = keys.includes("nakamura") ? "nakamura" : keys[1];
+  $("pa").onchange = $("pb").onchange = render;
+  $("nerd").onchange = () => document.body.classList.toggle("nerd-on", $("nerd").checked);
+  render();
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,1327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Your Chess Card — ultimate-team style ratings for Lichess & Chess.com</title>
+<style>
+  :root{
+    --paper:#FAFAF7; --ink:#101010; --muted:#6d6d66; --line:#E6E4DA;
+    --green:#00D364; --green-ink:#00A851; --pink:#FF2E88; --blue:#2E6BFF; --orange:#FF7A00;
+  }
+  *{box-sizing:border-box} html{scroll-behavior:smooth}
+  body{margin:0;background:var(--paper);color:var(--ink);overflow-x:hidden;
+    font:17px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  ::selection{background:var(--green);color:var(--ink)}
+  .grain{position:fixed;inset:0;z-index:5;opacity:.035;pointer-events:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='0.9'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E")}
+
+  .wrap{max-width:1020px;margin:0 auto;padding:0 24px}
+  nav{display:flex;justify-content:space-between;align-items:center;padding:26px 0}
+  .brand{font-weight:900;letter-spacing:.02em;font-size:18px}
+  .brand em{font-style:normal;color:var(--green-ink)}
+  nav a{color:var(--ink);text-decoration:none;font-weight:700;font-size:15px;
+    border-bottom:2px solid var(--green);padding-bottom:2px}
+
+  /* ---------------- hero ---------------- */
+  .hero{position:relative;padding:9vh 0 12vh;min-height:78vh}
+  h1{font-size:clamp(54px,10.5vw,124px);line-height:.94;margin:0 0 26px;font-weight:900;
+    letter-spacing:-.025em}
+  h1 .row{display:block;overflow:hidden}
+  h1 .row span{display:inline-block;transform:translateY(110%)}
+  h1 .neon{color:var(--green-ink);position:relative;white-space:nowrap}
+  .scribble{position:absolute;left:0;bottom:-.12em;width:100%;height:.22em;overflow:visible}
+  .scribble path{fill:none;stroke:var(--green);stroke-width:7;stroke-linecap:round}
+  .sub{color:var(--muted);max-width:540px;font-size:19px;margin:0 0 40px;opacity:0}
+  .sub b{color:var(--ink)}
+
+  .gen{display:flex;gap:12px;flex-wrap:wrap;align-items:center;opacity:0}
+  .platforms{display:flex;border:2px solid var(--ink);border-radius:14px;overflow:hidden;background:#fff}
+  .platforms button{background:#fff;border:0;color:var(--muted);padding:15px 20px;
+    font-size:16px;font-weight:800;cursor:pointer;transition:.2s}
+  .platforms button.on{background:var(--ink);color:#fff}
+  #uname{background:#fff;border:2px solid var(--ink);border-radius:14px;color:var(--ink);
+    padding:15px 20px;font-size:18px;min-width:250px;outline:none;font-weight:600}
+  #uname:focus{box-shadow:4px 4px 0 var(--green)}
+  #uname::placeholder{color:#b9b7ac;font-weight:500}
+  #go{background:var(--green);border:2px solid var(--ink);border-radius:14px;color:var(--ink);
+    font-size:18px;font-weight:900;padding:15px 30px;cursor:pointer;letter-spacing:.02em;
+    box-shadow:5px 5px 0 var(--ink);will-change:transform}
+  .err{color:#D62828;font-size:15px;min-height:24px;margin-top:14px;font-weight:600}
+  .hint{color:#a9a79c;font-size:14px;margin-top:6px;opacity:0}
+
+  .scatter{position:absolute;inset:0;pointer-events:none;z-index:-1}
+  .scatter b{position:absolute;font-weight:400;color:#DAD8CC;user-select:none;will-change:transform}
+  .scatter b.tint{color:#BFEFD6}
+
+  /* pawn parade */
+  .parade{position:absolute;left:-24px;right:-24px;bottom:0;height:110px;pointer-events:none;overflow:hidden;
+    -webkit-mask-image:linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent);
+    mask-image:linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent)}
+  .parade .ground{position:absolute;bottom:26px;left:0;right:0;height:2px;background:var(--line)}
+  .walker{position:absolute;bottom:28px;left:-8vw;font-size:32px;color:rgba(16,16,16,.16);
+    animation:walkx var(--wd,36s) linear infinite;animation-delay:var(--wdel,0s)}
+  @keyframes walkx{to{transform:translateX(120vw)}}
+  .walker b{display:block;font-weight:400;transform-origin:50% 100%;animation:gait .78s ease-in-out infinite}
+  @keyframes gait{
+    0%  {transform:translateY(0)   rotate(-6deg) scaleY(1)}
+    15% {transform:translateY(-9px) rotate(-2deg) scaleY(1.07)}
+    30% {transform:translateY(0)   rotate(3deg)  scaleY(.95)}
+    50% {transform:translateY(0)   rotate(6deg)  scaleY(1)}
+    65% {transform:translateY(-9px) rotate(2deg)  scaleY(1.07)}
+    80% {transform:translateY(0)   rotate(-3deg) scaleY(.95)}
+    100%{transform:translateY(0)   rotate(-6deg) scaleY(1)}}
+  .walker u{position:absolute;left:50%;bottom:-6px;width:24px;height:5px;margin-left:-12px;border-radius:50%;
+    background:rgba(16,16,16,.25);filter:blur(1.5px);text-decoration:none;animation:shad .78s ease-in-out infinite}
+  @keyframes shad{0%,100%{transform:scaleX(1);opacity:.6}
+    15%,65%{transform:scaleX(.62);opacity:.28}40%,90%{transform:scaleX(1);opacity:.6}}
+  .walker.kn{font-size:40px;color:rgba(16,16,16,.22)}
+  .walker.kn b{animation:knightgait 3.6s ease-in-out infinite}
+  @keyframes knightgait{0%,54%,100%{transform:translateY(0) rotate(-3deg)}
+    8%,24%,40%{transform:translateY(-6px) rotate(3deg)}
+    16%,32%,47%{transform:translateY(0) rotate(-3deg)}
+    62%{transform:translateY(-44px) rotate(15deg) scale(1.07)}
+    71%{transform:translateY(-46px) rotate(-7deg) scale(1.07)}
+    79%{transform:translateY(0) rotate(-2deg) scaleY(.8)}
+    86%{transform:translateY(-4px) scaleY(1.04)}}
+  .walker.kn u{animation:knshad 3.6s ease-in-out infinite}
+  @keyframes knshad{0%,54%,79%,100%{transform:scaleX(1);opacity:.6}62%,71%{transform:scaleX(.38);opacity:.15}}
+
+  /* ---------------- stage ---------------- */
+  #shake{will-change:transform}
+  #stage{min-height:100vh;display:none;flex-direction:column;align-items:center;justify-content:center;padding:60px 0}
+  #stage.show{display:flex}
+  .loadmsg{color:var(--muted);font-size:16px;font-weight:600;height:26px;margin-bottom:30px}
+  .loadmsg i{font-style:normal;color:var(--pink)}
+
+  .pack{position:relative;width:260px;height:392px;border-radius:22px;cursor:pointer;display:none;
+    background:#fff;border:2.5px solid var(--ink);box-shadow:9px 9px 0 var(--green);
+    align-items:center;justify-content:center;flex-direction:column;will-change:transform}
+  .pack .emblem{font-size:104px;line-height:1}
+  .pack .pk-label{font-weight:900;letter-spacing:.28em;font-size:13px;margin-top:14px}
+  .pack .pk-sub{color:var(--muted);font-size:11px;letter-spacing:.2em;margin-top:5px}
+  .pack::before{content:"";position:absolute;inset:12px;border:1.5px dashed #cfcdc2;border-radius:14px}
+  .pack .tap{position:absolute;bottom:-42px;left:0;right:0;text-align:center;font-size:12px;
+    letter-spacing:.3em;color:var(--muted);font-weight:700}
+  #flash{position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:60}
+  #burst{position:fixed;inset:0;pointer-events:none;z-index:55}
+  .ripple{position:absolute;border:3px solid var(--pink);border-radius:28px;inset:0;
+    pointer-events:none;opacity:0}
+
+  /* ---------------- card ---------------- */
+  .cardzone{perspective:1300px;position:relative}
+  #spin{position:relative;width:330px;height:520px;transform-style:preserve-3d;will-change:transform;
+    cursor:grab;display:none}
+  #spin.grabbing{cursor:grabbing}
+  #card,.cardback{position:absolute;inset:0;border-radius:24px;padding:22px 24px;overflow:hidden;
+    backface-visibility:hidden;-webkit-backface-visibility:hidden;border:2.5px solid var(--ink)}
+  .cardback{transform:rotateY(180deg);background:#fff;display:flex;align-items:center;
+    justify-content:center;flex-direction:column;gap:8px}
+  .cardback .bigpc{font-size:120px}
+  .cardback .bk{font-weight:900;letter-spacing:.3em;font-size:13px}
+  .cardback::before{content:"♞ ♟ ♛ ♜ ♝ ♚ ♞ ♟ ♛ ♜ ♝ ♚ ♞ ♟ ♛ ♜ ♝ ♚ ♞ ♟ ♛ ♜ ♝ ♚ ♞ ♟ ♛ ♜ ♝ ♚ ♞ ♟ ♛ ♜ ♝ ♚ ♞ ♟ ♛ ♜";
+    position:absolute;inset:-20px;font-size:34px;line-height:1.9;letter-spacing:14px;color:#F1EFE6;
+    z-index:-1;transform:rotate(-12deg)}
+
+  /* ---- FIFA-style tiers ---- */
+  .tier-bronze{background:linear-gradient(160deg,#FBEADC 8%,#EABF97 55%,#C67B45);box-shadow:9px 9px 0 #A85B2B;color:#3d2413}
+  .tier-silver{background:linear-gradient(160deg,#FBFCFE 8%,#D3DBE6 52%,#AEBAC9);box-shadow:9px 9px 0 #8494A8;color:#1c2530}
+  .tier-gold{background:linear-gradient(160deg,#FFF7D6 6%,#F5D874 48%,#E0AE33);box-shadow:9px 9px 0 #B6841E;color:#40300a}
+  .tier-prime{color:#F6E4B0;border-color:#E7C56A;box-shadow:9px 9px 0 #C8901A;
+    background:
+      radial-gradient(120% 55% at 50% -8%,rgba(231,197,106,.30),transparent 60%),
+      linear-gradient(158deg,#2b2b2f 0%,#151517 42%,#0b0b0c 100%)}
+  .tier-prime .ovr b,.tier-prime .cname,.tier-prime .st b{color:#F6E4B0}
+  .tier-prime .ovr span,.tier-prime .st span,.tier-prime .card-foot,.tier-prime .cname .t{color:#CBB27A}
+  .tier-prime .plat{border-color:#E7C56A;color:#F6E4B0}
+  .tier-prime .divider{background:#E7C56A;opacity:.75}
+  .tier-prime .st i{background:rgba(255,255,255,.16)}
+  .tier-prime .st i u{background:linear-gradient(90deg,#F6E4B0,#C8901A)}
+  .tier-prime .art .halo{background:radial-gradient(circle,rgba(231,197,106,.30),transparent 65%)}
+  .cardback.tier-prime{color:#F6E4B0}
+  .cardback.tier-prime::before{color:rgba(231,197,106,.10)}
+  .tier-icon{background:linear-gradient(160deg,#FFFBEC 6%,#EAD59A 50%,#BF9C4E);box-shadow:9px 9px 0 #8A6A1C;color:#3a2f12}
+  .tier-legend{background:linear-gradient(150deg,#FFE3F1 8%,#E7D6FF 30%,#D6F1FF 52%,#DFFCEB 74%,#FFF6DC 96%);
+    background-size:180% 180%;box-shadow:9px 9px 0 var(--pink);color:#241a2b;animation:holoShift 7s ease-in-out infinite}
+  @keyframes holoShift{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+  .tierchip{position:absolute;top:18px;right:-34px;transform:rotate(45deg);font-size:10px;
+    font-weight:900;letter-spacing:.2em;padding:5px 40px;color:#fff;background:var(--ink);z-index:3}
+  .tier-legend .tierchip{background:var(--pink)}
+  .tier-gold .tierchip{background:#B6841E}
+  .tier-icon .tierchip{background:#8A6A1C}
+  .tier-prime .tierchip{background:linear-gradient(90deg,#E7C56A,#C8901A);color:#151517}
+  .tier-bronze .tierchip{background:#A85B2B}
+  .tier-silver .tierchip{background:#6d7d90}
+
+  /* rare = holographic foil sweep */
+  .rare .rarefoil{position:absolute;inset:0;pointer-events:none;z-index:2;mix-blend-mode:overlay;opacity:.55;
+    background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.9) 44%,rgba(180,220,255,.7) 50%,
+      rgba(255,180,240,.7) 56%,transparent 70%);background-size:260% 260%;animation:foilSweep 4.5s linear infinite}
+  @keyframes foilSweep{0%{background-position:120% 0}100%{background-position:-120% 0}}
+  .tier-prime.rare .rarefoil{mix-blend-mode:screen;opacity:.7}
+
+  /* titled-player crown badge */
+  .crown{position:absolute;top:14px;left:50%;transform:translateX(-50%);font-size:20px;z-index:3;
+    color:#E7C56A;text-shadow:0 1px 0 rgba(0,0,0,.4);display:none}
+  .titled .crown{display:block}
+
+  .card-top{display:flex;justify-content:space-between;align-items:flex-start}
+  .ovr b{font-size:66px;font-weight:900;line-height:1;letter-spacing:-.03em}
+  .ovr span{display:block;font-size:11px;letter-spacing:.22em;color:var(--muted);margin-top:4px;font-weight:800}
+  .plat{font-size:11px;letter-spacing:.16em;border:2px solid var(--ink);border-radius:99px;
+    padding:5px 12px;font-weight:900;margin-top:6px}
+  .art{height:168px;display:flex;align-items:center;justify-content:center;position:relative;margin:4px 0 0}
+  .art .halo{position:absolute;width:150px;height:150px;border-radius:50%;background:radial-gradient(circle,rgba(0,211,100,.22),transparent 65%)}
+  .art .pc{font-size:118px;filter:drop-shadow(0 12px 0 rgba(16,16,16,.10))}
+  .cname{font-size:24px;font-weight:900;text-align:center;letter-spacing:.03em;text-transform:uppercase;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cname .t{color:var(--green-ink);font-size:14px;vertical-align:middle;margin-right:6px}
+  .divider{height:2px;background:var(--ink);opacity:.85;margin:12px 0;border-radius:2px}
+  .sgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px 22px}
+  .st{display:grid;grid-template-columns:36px 34px 1fr;align-items:center;gap:8px}
+  .st b{font-size:20px;font-weight:900;text-align:right}
+  .st span{font-size:11px;letter-spacing:.12em;color:var(--muted);font-weight:800}
+  .st i{height:7px;border-radius:4px;background:rgba(16,16,16,.10);overflow:hidden}
+  .st i u{display:block;height:100%;width:0;border-radius:4px;text-decoration:none;
+    background:linear-gradient(90deg,var(--green),var(--green-ink))}
+  .tier-legend .st i u{background:linear-gradient(90deg,var(--pink),var(--blue))}
+  .tier-icon .st i u{background:linear-gradient(90deg,#C8901A,#8A6A1C)}
+  .card-foot{display:flex;justify-content:space-between;margin-top:14px;font-size:11px;
+    color:var(--muted);letter-spacing:.05em;font-weight:700}
+  .foil{position:absolute;inset:0;pointer-events:none;opacity:.5;mix-blend-mode:overlay;
+    background:radial-gradient(380px circle at var(--mx,70%) var(--my,20%),rgba(255,255,255,.95),transparent 46%)}
+
+  .actions{display:flex;gap:12px;margin-top:44px;flex-wrap:wrap;justify-content:center;opacity:0}
+  .actions button,.actions a{background:#fff;border:2px solid var(--ink);color:var(--ink);
+    border-radius:12px;padding:12px 20px;font-size:15px;font-weight:800;cursor:pointer;
+    text-decoration:none;box-shadow:4px 4px 0 var(--ink);will-change:transform}
+  .actions .primary{background:var(--pink);color:#fff;box-shadow:4px 4px 0 var(--ink)}
+  .finenote{color:#a9a79c;font-size:12.5px;margin-top:22px;max-width:480px;text-align:center}
+  .spin-hint{margin-top:16px;color:var(--muted);font-size:13px;font-weight:700;letter-spacing:.06em;opacity:0}
+
+  footer{margin:60px 0 40px;color:var(--muted);font-size:13px;border-top:1px solid var(--line);padding-top:18px}
+  footer a{color:var(--ink)}
+
+  .spark{position:fixed;z-index:70;pointer-events:none;font-weight:900;user-select:none}
+  .feedback{position:fixed;right:20px;bottom:20px;z-index:80;background:var(--ink);color:#fff;
+    text-decoration:none;font-weight:900;font-size:14px;letter-spacing:.05em;
+    padding:12px 18px;border-radius:99px;box-shadow:4px 4px 0 var(--green);transition:.15s}
+  .feedback:hover{transform:translateY(-2px);box-shadow:5px 6px 0 var(--pink)}
+
+  /* -------- FUT-style walkout -------- */
+  .walkout{position:relative;width:min(90vw,420px);height:430px;display:none;
+    align-items:center;justify-content:center}
+  .rays{position:absolute;left:50%;top:50%;width:580px;height:580px;margin:-290px 0 0 -290px;
+    border-radius:50%;opacity:0;will-change:transform;
+    background:repeating-conic-gradient(rgba(232,182,76,.30) 0 8deg, transparent 8deg 21deg);
+    -webkit-mask-image:radial-gradient(circle,#000 28%,transparent 66%);
+    mask-image:radial-gradient(circle,#000 28%,transparent 66%)}
+  .wo-line{position:absolute;top:6%;bottom:6%;width:5px;border-radius:3px;opacity:0;
+    transform-origin:50% 100%;background:linear-gradient(180deg,transparent,#E8B64C 40%,#C8901A)}
+  #wo1{left:4%} #wo2{right:4%}
+  .wo-item{position:absolute;font-weight:900;font-size:46px;letter-spacing:.03em;
+    text-align:center;opacity:0;max-width:90%}
+  .wo-item small{display:block;font-size:12px;letter-spacing:.34em;color:var(--muted);
+    margin-bottom:10px;font-weight:800}
+  .wo-item.gold{color:#C8901A}
+  .wo-sil{position:absolute;font-size:200px;line-height:1;color:var(--ink);opacity:0}
+  .wo-skip{position:absolute;bottom:-38px;left:0;right:0;text-align:center;font-size:11px;
+    letter-spacing:.3em;color:#b9b7ac;font-weight:800}
+
+  /* clickable stats + explainer modal */
+  #sgrid .st{cursor:pointer;border-radius:8px;padding:2px 5px;margin:-2px -5px;
+    transition:background .15s,transform .08s}
+  #sgrid .st:hover{background:rgba(16,16,16,.07)}
+  #sgrid .st:active{transform:scale(.97)}
+  #sgrid .st:focus-visible{outline:2px solid var(--blue);outline-offset:1px}
+  .tier-prime #sgrid .st:hover{background:rgba(255,255,255,.10)}
+  #statModal{position:fixed;inset:0;z-index:90;display:none;align-items:center;justify-content:center;
+    padding:20px;background:rgba(16,16,16,.55)}
+  #statModal.show{display:flex}
+  .sm-card{background:var(--paper);border:2.5px solid var(--ink);border-radius:20px;max-width:440px;width:100%;
+    padding:26px;box-shadow:10px 10px 0 var(--ink);position:relative;animation:smPop .24s ease}
+  @keyframes smPop{from{transform:translateY(14px) scale(.96);opacity:0}to{transform:none;opacity:1}}
+  .sm-close{position:absolute;top:12px;right:16px;border:0;background:none;font-size:26px;line-height:1;
+    cursor:pointer;color:var(--muted);font-weight:900}
+  .sm-key{display:flex;align-items:baseline;gap:14px}
+  .sm-key b{font-size:46px;font-weight:900;line-height:1;letter-spacing:-.02em}
+  .sm-key .nm{font-size:15px;font-weight:900;letter-spacing:.16em}
+  .sm-key .nm small{display:block;color:var(--muted);letter-spacing:.03em;font-weight:700;
+    font-size:12.5px;line-height:1.4;margin-top:4px;text-transform:none}
+  .sm-bar{height:10px;border-radius:6px;background:rgba(16,16,16,.10);overflow:hidden;margin:16px 0 18px}
+  .sm-bar u{display:block;height:100%;width:0;border-radius:6px;
+    background:linear-gradient(90deg,var(--green),var(--green-ink))}
+  .sm-h{font-size:11px;letter-spacing:.16em;font-weight:900;color:var(--muted);margin:0 0 5px}
+  .sm-txt{font-size:15.5px;line-height:1.55;margin:0}
+  .sm-foot{margin-top:20px;font-size:13.5px}
+  .sm-foot a{color:var(--ink);font-weight:800}
+
+  /* deep-analysis button + engine readout */
+  #deep.busy{pointer-events:none}
+  #deep .spin-ico{display:inline-block;animation:sp 1s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  .engline{margin-top:16px;min-height:22px;font-size:13.5px;font-weight:700;letter-spacing:.03em;
+    color:var(--muted);text-align:center;max-width:460px;opacity:0;transition:opacity .3s}
+  .engline.show{opacity:1}
+  .engline b{color:var(--green-ink);font-weight:900}
+  .engline .warn{color:#D62828}
+  .engbar{display:inline-block;vertical-align:middle;width:150px;height:8px;border-radius:5px;
+    background:rgba(16,16,16,.10);overflow:hidden;margin-left:8px}
+  .engbar u{display:block;height:100%;width:0;border-radius:5px;text-decoration:none;
+    background:linear-gradient(90deg,var(--green),var(--green-ink))}
+  .st.engced b{color:var(--green-ink)}
+
+  @media (prefers-reduced-motion: reduce){
+    *,*::before,*::after{animation-duration:.001s !important;transition-duration:.001s !important}
+    .parade,.scatter{display:none}
+    h1 .row span{transform:none}
+    .sub,.gen,.hint{opacity:1 !important}
+  }
+</style>
+</head>
+<body>
+<div class="grain"></div>
+<div id="shake">
+<div class="wrap">
+  <nav>
+    <div class="brand">CHESS <em>·</em> CARD</div>
+    <a href="how-stats-work.html">how stats work →</a>
+  </nav>
+
+  <section class="hero">
+    <div class="scatter" id="scatter"></div>
+    <h1>
+      <span class="row"><span>YOUR CHESS,</span></span>
+      <span class="row"><span class="neon">AS A CARD.
+        <svg class="scribble" viewBox="0 0 520 28" preserveAspectRatio="none"><path id="scrib" d="M6 20 Q 90 6 180 16 T 350 14 T 514 12"/></svg>
+      </span></span>
+    </h1>
+    <p class="sub">Ultimate-team style ratings for your <b>Lichess</b> or <b>Chess.com</b> account.
+    Six stats, an overall, an archetype — computed live from your real games.</p>
+    <div class="gen">
+      <div class="platforms" id="plats">
+        <button data-p="lichess" class="on">Lichess</button>
+        <button data-p="chesscom">Chess.com</button>
+      </div>
+      <input id="uname" placeholder="username" spellcheck="false" autocomplete="off">
+      <button id="go">RIP THE PACK</button>
+    </div>
+    <div class="err" id="err"></div>
+    <div class="hint">Try any public account — yours, or a streamer's.</div>
+    <div class="parade" aria-hidden="true">
+      <div class="ground"></div>
+      <div class="walker" style="--wd:34s;--wdel:-2s;font-size:33px"><b>♟</b><u></u></div>
+      <div class="walker" style="--wd:39s;--wdel:-9s;font-size:27px"><b>♟</b><u></u></div>
+      <div class="walker" style="--wd:31s;--wdel:-15s;font-size:36px"><b>♟</b><u></u></div>
+      <div class="walker" style="--wd:37s;--wdel:-21s;font-size:29px"><b>♝</b><u></u></div>
+      <div class="walker" style="--wd:33s;--wdel:-27s;font-size:31px"><b>♟</b><u></u></div>
+      <div class="walker" style="--wd:41s;--wdel:-33s;font-size:26px"><b>♟</b><u></u></div>
+      <div class="walker kn" style="--wd:23s;--wdel:-6s"><b>♞</b><u></u></div>
+      <div class="walker kn" style="--wd:27s;--wdel:-18s;font-size:34px"><b>♞</b><u></u></div>
+    </div>
+  </section>
+
+  <section id="stage">
+    <div class="loadmsg" id="loadmsg"></div>
+    <div class="pack" id="pack">
+      <div class="emblem">♞</div>
+      <div class="pk-label">PLAYER PACK</div>
+      <div class="pk-sub">RATED LIVE</div>
+      <div class="tap">CLICK TO RIP</div>
+    </div>
+    <div class="walkout" id="walkout">
+      <div class="rays" id="rays"></div>
+      <div class="wo-line" id="wo1"></div>
+      <div class="wo-line" id="wo2"></div>
+      <div class="wo-sil" id="woSil">♞</div>
+      <div class="wo-item" id="woItem"></div>
+      <div class="wo-skip">CLICK TO SKIP</div>
+    </div>
+    <div class="cardzone">
+      <div id="spin">
+        <div id="card">
+          <div class="tierchip" id="tierchip">GOLD</div>
+          <div class="crown">♛</div>
+          <div class="card-top">
+            <div class="ovr"><b id="ovrNum">00</b><span id="arch">—</span></div>
+            <div class="plat" id="platBadge">LICHESS</div>
+          </div>
+          <div class="art"><div class="halo"></div><div class="pc" id="pieceArt">♞</div></div>
+          <div class="cname" id="cname"></div>
+          <div class="divider"></div>
+          <div class="sgrid" id="sgrid"></div>
+          <div class="card-foot"><span id="cfoot-left"></span><span class="cardbrand">CHESS CARD</span></div>
+          <div class="foil"></div>
+          <div class="rarefoil"></div>
+        </div>
+        <div class="cardback tier-gold" id="cardback">
+          <div class="bigpc">♞</div><div class="bk">PLAYER PACK</div>
+        </div>
+      </div>
+      <div class="ripple" id="ripple"></div>
+    </div>
+    <div class="spin-hint" id="spinhint">GRAB &amp; THROW TO SPIN · TAP A STAT TO SEE WHY</div>
+    <div class="actions" id="actions">
+      <button id="deep">♟ Deep analysis</button>
+      <button id="dl" class="primary">Download PNG</button>
+      <button id="again">New card</button>
+      <a href="how-stats-work.html">How stats work →</a>
+    </div>
+    <div class="engline" id="engline"></div>
+    <p class="finenote">Tap any stat to see why it's that number, or hit <b>Deep analysis</b> to run Stockfish
+    in your browser and get real engine-measured Attack, Defense, Endgame &amp; Control. Overall is calibrated
+    to rating percentiles (Chess.com percentiles are approximate); the very top is spread by absolute rating so
+    world #1s outrank streamers. Titled players get a PRIME card. Dormant 1yr+ → ICON, 5yr+ → LEGEND.
+    Unofficial fan project — not affiliated with Lichess, Chess.com, or any football game.</p>
+  </section>
+
+  <footer class="wrap">
+    Data: <a href="https://lichess.org">Lichess</a> & <a href="https://www.chess.com">Chess.com</a> public APIs
+    · built as a portfolio piece · <a href="how-stats-work.html">how the stats work</a>
+  </footer>
+</div>
+</div>
+<div id="flash"></div>
+<canvas id="burst"></canvas>
+
+<div id="statModal" aria-modal="true" role="dialog">
+  <div class="sm-card">
+    <button class="sm-close" id="smClose" aria-label="Close">×</button>
+    <div class="sm-key">
+      <b id="smVal">0</b>
+      <div class="nm"><span id="smName">SPEED</span><small id="smMeasure"></small></div>
+    </div>
+    <div class="sm-bar"><u id="smBar"></u></div>
+    <div class="sm-h">YOUR READ</div>
+    <p class="sm-txt" id="smWhy"></p>
+    <div class="sm-foot"><a href="how-stats-work.html" id="smMore">Full methodology for all six stats →</a></div>
+  </div>
+</div>
+<a class="feedback" href="mailto:arshiyaanand.works@gmail.com?subject=Chess%20Card%20%E2%80%94%20my%20review&body=Rating%20(1%E2%80%9310)%3A%20%0AWhat%20slapped%3A%20%0AWhat%20sucked%3A%20%0AWould%20you%20share%20your%20card%3F%20(y%2Fn)%3A%20">★ RATE THIS</a>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script type="module">import { Chess } from "./chess.min.js"; window.Chess = Chess;</script>
+<script>
+/* ============================= ENGINE-START ============================= */
+/* Rating→percentile anchors. Lichess prefers the live percentile from its
+   perf API; these curves are the fallback. Chess.com curve is approximate. */
+const CDF = {
+  lichess_blitz:[[600,1],[800,4],[1000,11],[1200,24],[1500,50],[1800,77],[2000,88],[2200,94.5],[2400,97.9],[2600,99.4],[2800,99.85],[3100,99.99]],
+  lichess_rapid:[[600,1],[800,4],[1000,12],[1200,26],[1500,53],[1800,80],[2000,90],[2200,95.5],[2400,98.4],[2600,99.6],[2900,99.99]],
+  lichess_bullet:[[600,2],[800,6],[1000,14],[1200,27],[1500,52],[1800,77],[2000,87],[2200,93.5],[2400,97],[2600,98.9],[3100,99.99]],
+  chesscom_blitz:[[200,4],[400,15],[600,33],[800,52],[1000,66],[1200,77],[1400,85],[1600,90.5],[1800,94],[2000,96.6],[2200,98.2],[2400,99.2],[2700,99.9],[3000,99.99]],
+  chesscom_rapid:[[300,6],[500,20],[700,40],[900,58],[1100,71],[1300,81],[1500,88],[1700,92.5],[1900,95.6],[2100,97.7],[2300,98.9],[2600,99.8],[2900,99.99]],
+  chesscom_bullet:[[200,5],[400,17],[600,35],[800,53],[1000,66],[1200,77],[1400,85],[1600,90],[1800,93.8],[2000,96.3],[2200,98],[2500,99.4],[3000,99.97]],
+};
+function cdfPct(anchors, r){
+  if (r == null) return null;
+  if (r <= anchors[0][0]) return anchors[0][1];
+  for (let i = 1; i < anchors.length; i++){
+    const [r1, p1] = anchors[i - 1], [r2, p2] = anchors[i];
+    if (r <= r2) return p1 + (p2 - p1) * (r - r1) / (r2 - r1);
+  }
+  return 99.99;
+}
+const clamp = (x, lo, hi) => Math.max(lo, Math.min(hi, x));
+const pctToCard = p => p == null ? null : Math.round(40 + 59 * Math.pow(p / 100, 1.6));
+// map a raw 0..1-ish behavior value onto 0..99 between hand-tuned anchors
+const scale = (x, lo, hi) => x == null ? null : Math.round(clamp((x - lo) / (hi - lo), 0, 1) * 59 + 40);
+
+/* Normalize one game into {res, mateWin, flagLoss, plies, eco, oppDiff} */
+function normLichess(g, uname){
+  const me = g.players.white?.user?.name?.toLowerCase() === uname ? "white" : "black";
+  const opp = me === "white" ? "black" : "white";
+  const res = g.winner == null ? 0.5 : (g.winner === me ? 1 : 0);
+  return {
+    res,
+    mateWin: res === 1 && g.status === "mate",
+    flagLoss: res === 0 && g.status === "outoftime",
+    plies: (g.moves || "").split(" ").filter(Boolean).length,
+    eco: g.opening?.eco || "?",
+    oppDiff: (g.players[opp]?.rating ?? 0) - (g.players[me]?.rating ?? 0),
+  };
+}
+function normChesscom(g, uname){
+  const me = g.white.username.toLowerCase() === uname ? g.white : g.black;
+  const opp = g.white.username.toLowerCase() === uname ? g.black : g.white;
+  const draws = ["agreed","repetition","stalemate","insufficient","50move","timevsinsufficient"];
+  const res = me.result === "win" ? 1 : draws.includes(me.result) ? 0.5 : 0;
+  const body = (g.pgn || "").split("\n\n")[1] || "";
+  const plies = body.replace(/\{[^}]*\}/g, " ").split(/\s+/)
+    .filter(t => t && !/^\d+\.+$/.test(t) && !["1-0","0-1","1/2-1/2","*"].includes(t)).length;
+  return {
+    res,
+    mateWin: res === 1 && opp.result === "checkmated",
+    flagLoss: me.result === "timeout",
+    plies,
+    eco: ((g.pgn || "").match(/\[ECO "(\w+)"\]/) || [])[1] || "?",
+    oppDiff: (opp.rating ?? 0) - (me.rating ?? 0),
+  };
+}
+
+/* Elite rating anchors. Percentiles saturate at the top — a 2500 and a 2900
+   both read as "~99th percentile," which is exactly why a streamer and a world
+   #1 used to tie at 96. These break that ceiling using ABSOLUTE rating so the
+   very top actually spreads out. Platform-specific: chess.com blitz runs hotter
+   than Lichess blitz. Hand-tuned, approximate. */
+const ELITE = {
+  lichess:  [[2300,93],[2450,95],[2550,96],[2650,97],[2750,98],[2850,99],[3000,99]],
+  chesscom: [[2450,93],[2600,95],[2700,96],[2800,97],[2900,98],[3050,99],[3200,99]],
+};
+// A title is permanent proof of strength that speed ratings understate, so a
+// titled player never falls below this floor — a titled streamer out-cards an
+// equal-rated amateur, by design.
+const TITLE_FLOOR = {GM:92, IM:88, FM:85, CM:83, NM:84, WGM:90, WIM:86, WFM:83, WCM:81, LM:82};
+function eliteFromRating(platform, r){
+  if (r == null) return 0;
+  const a = ELITE[platform]; if (!a) return 0;
+  if (r <= a[0][0]) return 0;                       // below the elite floor: no boost
+  for (let i = 1; i < a.length; i++){
+    const [r1, p1] = a[i - 1], [r2, p2] = a[i];
+    if (r <= r2) return p1 + (p2 - p1) * (r - r1) / (r2 - r1);
+  }
+  return 99;
+}
+
+/* Behavior stats from normalized recent games. Returns scaled 0-99 stats plus
+   the raw drivers, so the card can explain WHY each stat is what it is. */
+function behavior(gs){
+  const n = gs.length;
+  if (n < 10) return {ATK:null, DEF:null, END:null, OPN:null, CON:null, flagRate:null, n, raw:{}};
+  const score = a => a.length ? a.reduce((s, g) => s + g.res, 0) / a.length : null;
+  const overall = score(gs);
+  const wins = gs.filter(g => g.res === 1), losses = gs.filter(g => g.res === 0);
+  const winRate = wins.length / n;
+  const mateRate = wins.length ? wins.filter(g => g.mateWin).length / wins.length : 0;
+  const vsHigher = gs.filter(g => g.oppDiff >= 25);
+  const defScore = vsHigher.length >= 8 ? score(vsHigher) : null;
+  const long = gs.filter(g => g.plies >= 70);
+  const endScore = long.length >= 8 ? score(long) : null;
+  const distinctEco = new Set(gs.map(g => g.eco)).size;
+  const variety = distinctEco / n;
+  const earlyLossRate = losses.length ? losses.filter(g => g.plies < 40).length / n : 0;
+  // tilt resistance: score in the game right after a loss
+  const after = [];
+  for (let i = 1; i < n; i++) if (gs[i - 1].res === 0) after.push(gs[i]);
+  const tilt = after.length >= 6 ? score(after) - overall : null;
+  const flagRate = losses.length >= 5 ? losses.filter(g => g.flagLoss).length / losses.length : null;
+  return {
+    ATK: scale(mateRate * 0.75 + winRate * 0.55, 0.18, 0.62),
+    DEF: defScore == null ? null : scale(defScore, 0.18, 0.62),
+    END: endScore == null ? null : scale(endScore - overall, -0.16, 0.16),
+    OPN: scale(variety * 0.7 + (1 - earlyLossRate) * 0.45, 0.45, 0.95),
+    CON: tilt == null ? null : scale(tilt, -0.14, 0.12),
+    flagRate, n,
+    raw:{overall, winRate, mateRate, defScore, vsHigherN:vsHigher.length, endScore,
+         longN:long.length, distinctEco, earlyLossRate, tilt, afterN:after.length,
+         flagRate, winsN:wins.length, lossesN:losses.length},
+  };
+}
+
+/* Plain-English "why is my stat this number" for the per-stat panel. */
+function statReasons(b){
+  const r = b.raw || {}, pc = x => Math.round(x * 100);
+  const deep = " Quick estimate — hit Deep analysis to replace it with a real Stockfish measurement.";
+  if (!b.n || b.n < 10){
+    const t = "Estimated from your rating — under 10 recent rated games." + deep;
+    return {SPD:t, ATK:t, DEF:t, END:t, OPN:t, CON:t};
+  }
+  return {
+    SPD: b.flagRate != null
+      ? `You lose on time in ${pc(b.flagRate)}% of your losses. ` +
+        (b.flagRate < 0.15 ? "Rock-solid clock — that's what lifts this."
+         : b.flagRate > 0.30 ? "The clock is costing you; that's what caps it."
+         : "Middle of the pack on the clock.")
+      : "Set from your bullet rating — not enough flagged losses to measure directly.",
+    ATK: `Anchored to your rating, tilted by how decisively you win — ${pc(r.mateRate || 0)}% of your wins end in checkmate.` + deep,
+    DEF: (r.defScore != null
+      ? `Anchored to your rating, tilted by your score vs clearly stronger opponents (${pc(r.defScore)}% over ${r.vsHigherN} games).`
+      : `Anchored to your rating — not enough games vs stronger opponents to tilt it yet.`) + deep,
+    END: (r.endScore != null
+      ? `Anchored to your rating, tilted by how you do in long games (70+ plies): ${pc(r.endScore)}% vs ${pc(r.overall)}% overall.`
+      : `Anchored to your rating — not enough long games to tilt it yet.`) + deep,
+    OPN: `${r.distinctEco} distinct openings across ${b.n} games, and only ${pc(r.earlyLossRate)}% were quick losses. Variety plus not getting blown out early = prepared.`,
+    CON: (r.tilt != null
+      ? `Anchored to your rating, tilted by how you score right after a loss (${pc((r.overall || 0) + r.tilt)}% vs a ${pc(r.overall)}% baseline).`
+      : `Anchored to your rating — not enough back-to-back games to measure tilt yet.`) + deep,
+  };
+}
+
+/* Assemble the card */
+function buildCard(o){
+  const pcts = {
+    blitz: o.livePct.blitz ?? cdfPct(CDF[o.platform + "_blitz"], o.ratings.blitz),
+    rapid: o.livePct.rapid ?? cdfPct(CDF[o.platform + "_rapid"], o.ratings.rapid),
+    bullet: o.livePct.bullet ?? cdfPct(CDF[o.platform + "_bullet"], o.ratings.bullet),
+  };
+  const best = Math.max(...[pcts.blitz, pcts.rapid].filter(x => x != null), 0.5);
+  const baseCard = pctToCard(best);
+  const b = behavior(o.games);
+  const lowData = (b.n || 0) < 10;
+  let stats;
+  if (lowData){
+    // Not enough recent games for behavior stats: derive everything from
+    // ratings with small offsets, and say so on the card.
+    const off = {SPD:0, ATK:-2, DEF:-4, END:-1, OPN:-6, CON:-3};
+    stats = {};
+    for (const k in off){
+      const base = k === "SPD" && pcts.bullet != null ? pctToCard(pcts.bullet) : baseCard;
+      stats[k] = clamp(base + off[k], 40, 99);
+    }
+  } else {
+    // Sub-stats are skill-ANCHORED (rating dominates) with a light style tilt,
+    // so a strong player always out-ranks a weak one even before engine work.
+    // Deep Analysis later replaces ATK/DEF/END/CON with real Stockfish numbers.
+    const spdBase = pctToCard(pcts.bullet) ?? baseCard - 4;
+    const mix = (style, w) => style == null ? baseCard - 3
+      : clamp(Math.round((1 - w) * baseCard + w * style), 40, 99);
+    stats = {
+      SPD: clamp(Math.round(spdBase + (b.flagRate == null ? 0 : (0.35 - b.flagRate) * 16)), 40, 99),
+      ATK: mix(b.ATK, 0.32), DEF: mix(b.DEF, 0.32), END: mix(b.END, 0.32),
+      OPN: mix(b.OPN, 0.40), CON: mix(b.CON, 0.32),
+    };
+  }
+  const avg = Object.values(stats).reduce((a, x) => a + x, 0) / 6;
+  let ovr = lowData ? baseCard : clamp(Math.round(0.78 * baseCard + 0.22 * avg), 40, 99);
+
+  // --- decompress the elite + reward titles (the "make ratings dynamic" fix) ---
+  const eliteBoost = Math.round(eliteFromRating(o.platform, Math.max(o.ratings.blitz || 0, o.ratings.rapid || 0)));
+  const titleFloor = o.title ? (TITLE_FLOOR[o.title] || 0) : 0;
+  const bestRating = Math.max(o.ratings.blitz || 0, o.ratings.rapid || 0, o.ratings.bullet || 0);
+  ovr = clamp(Math.max(ovr, eliteBoost, titleFloor), 40, 99);
+
+  const ARCH = {SPD:["SPEED DEMON","♞"], ATK:["TACTICIAN","♛"], DEF:["THE WALL","♜"],
+                END:["GRINDER","♚"], OPN:["THEORY NERD","♝"], CON:["UNTILTABLE","♟"]};
+  const topKey = Object.keys(stats).sort((a, c) => stats[c] - stats[a])[0];
+
+  // --- FIFA-style tiering ---
+  //  dormancy = the "retired great" cards:  1yr+ → ICON, 5yr+ → LEGEND
+  //  active:   titled OR 90+ → PRIME (premium),  else GOLD / SILVER / BRONZE by OVR
+  const yrs = o.lastSeen != null ? (Date.now() - o.lastSeen) / (365.25 * 864e5) : 0;
+  const titled = !!o.title;
+  let tier, tierName;
+  if (yrs >= 5){ tier = "legend"; tierName = "LEGEND"; }
+  else if (yrs >= 1){ tier = "icon"; tierName = "ICON"; }
+  else if (titled || ovr >= 90){ tier = "prime"; tierName = titled ? o.title : "PRIME"; }
+  else if (ovr >= 75){ tier = "gold"; tierName = "GOLD"; }
+  else if (ovr >= 65){ tier = "silver"; tierName = "SILVER"; }
+  else { tier = "bronze"; tierName = "BRONZE"; }
+
+  // rarity = the shiny finish. Always rare for prime/icon/legend; otherwise the
+  // top of each band, or a spiky (standout) stat spread, earns the foil.
+  const bandFloor = tier === "gold" ? 75 : tier === "silver" ? 65 : 40;
+  const bandTop = tier === "gold" ? 90 : tier === "silver" ? 75 : 65;
+  const spread = Math.max(...Object.values(stats)) - Math.min(...Object.values(stats));
+  const rare = ["prime", "icon", "legend"].includes(tier)
+    || (ovr - bandFloor) / (bandTop - bandFloor) >= 0.8
+    || (!lowData && spread >= 24);
+
+  const dormant = tier === "icon" || tier === "legend";
+  return {
+    ovr, stats, tier, tierName, rare, titled, dormant,
+    arch: dormant ? tierName : lowData ? "MYSTERY CARD" : ARCH[topKey][0],
+    piece: dormant ? "♔" : lowData ? "♟" : ARCH[topKey][1],
+    lowData, sample: b.n, pct: Math.round(best * 10) / 10, topKey,
+    percentiles: pcts, ratings: o.ratings, bestRating, platform: o.platform,
+    reasons: statReasons(b),
+  };
+}
+/* ============================= ENGINE-END ============================= */
+
+/* ---------------- data fetching ---------------- */
+// every request gets a hard timeout so a slow API can't hang the card forever
+function fetchT(url, opt = {}, ms = 12000){
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), ms);
+  return fetch(url, {...opt, signal:ctrl.signal}).finally(() => clearTimeout(t));
+}
+async function j(url, opt){ const r = await fetchT(url, opt); if (!r.ok) throw new Error(r.status); return r.json(); }
+
+async function fetchLichess(u){
+  const user = await j(`https://lichess.org/api/user/${u}`);
+  // the three percentile calls run in parallel instead of one-by-one
+  const perfNames = ["blitz", "rapid", "bullet"];
+  const perfRes = await Promise.all(perfNames.map(p =>
+    j(`https://lichess.org/api/user/${u}/perf/${p}`).then(r => r.percentile ?? null).catch(() => null)));
+  const livePct = {}; perfNames.forEach((p, i) => livePct[p] = perfRes[i]);
+  const nd = await fetchT(`https://lichess.org/api/games/user/${u}?max=60&rated=true&perfType=blitz,rapid,bullet&opening=true`,
+    {headers:{Accept:"application/x-ndjson"}}, 15000);
+  const text = await nd.text();
+  const uname = user.username.toLowerCase();
+  const parsed = text.trim().split("\n").filter(Boolean).map(l => JSON.parse(l));
+  const games = parsed.map(g => normLichess(g, uname));
+  // raw move lists (newest first) for optional engine analysis
+  const rawGames = parsed.slice(0, ENGINE_GAMES).map(g => {
+    const userWhite = (g.players.white?.user?.name || "").toLowerCase() === uname;
+    return {
+      san: (g.moves || "").split(" ").filter(Boolean),
+      userWhite,
+      result: g.winner == null ? "draw" : ((g.winner === "white") === userWhite ? "win" : "loss"),
+    };
+  }).filter(g => g.san.length >= 16);
+  return {
+    platform:"lichess", username:user.username, title:user.title || null,
+    lastSeen:user.seenAt ?? null,
+    flag:user.profile?.flag || null, totalGames:user.count?.rated ?? user.count?.all,
+    ratings:{blitz:user.perfs?.blitz?.rating, rapid:user.perfs?.rapid?.rating, bullet:user.perfs?.bullet?.rating},
+    livePct, games, rawGames,
+  };
+}
+
+async function fetchChesscom(u){
+  const prof = await j(`https://api.chess.com/pub/player/${u}`);
+  const st = await j(`https://api.chess.com/pub/player/${u}/stats`);
+  const arch = (await j(`https://api.chess.com/pub/player/${u}/games/archives`)).archives;
+  // only the last 3 months, fetched in PARALLEL (was up to 12, one-by-one — the slow path)
+  const months = arch.slice(-3);
+  const archData = await Promise.all(months.map(url => j(url).catch(() => ({games:[]}))));
+  let raw = [];
+  for (const a of archData) raw = raw.concat((a.games || []).filter(g =>
+    g.rated && ["blitz","rapid","bullet"].includes(g.time_class)));
+  const uname = prof.username.toLowerCase();
+  const total = ["chess_blitz","chess_rapid","chess_bullet"].reduce((s, k) => {
+    const r = st[k]?.record; return s + (r ? r.win + r.loss + r.draw : 0); }, 0);
+  const draws = ["agreed","repetition","stalemate","insufficient","50move","timevsinsufficient"];
+  const rawGames = raw.slice(-ENGINE_GAMES).reverse().map(g => {
+    const userWhite = g.white.username.toLowerCase() === uname;
+    const me = userWhite ? g.white : g.black;
+    return {
+      pgn: g.pgn || "",
+      userWhite,
+      result: me.result === "win" ? "win" : draws.includes(me.result) ? "draw" : "loss",
+    };
+  }).filter(g => g.pgn);
+  return {
+    platform:"chesscom", username:prof.username, title:prof.title || null,
+    lastSeen:prof.last_online ? prof.last_online * 1000 : null,
+    flag:(prof.country || "").split("/").pop() || null, totalGames:total,
+    ratings:{blitz:st.chess_blitz?.last?.rating, rapid:st.chess_rapid?.last?.rating, bullet:st.chess_bullet?.last?.rating},
+    livePct:{blitz:null, rapid:null, bullet:null},
+    games: raw.slice(-120).map(g => normChesscom(g, uname)), rawGames,
+  };
+}
+
+/* ---------------- UI ---------------- */
+const $ = id => document.getElementById(id);
+let platform = "lichess";
+document.querySelectorAll("#plats button").forEach(b => b.onclick = () => {
+  document.querySelectorAll("#plats button").forEach(x => x.classList.remove("on"));
+  b.classList.add("on"); platform = b.dataset.p;
+});
+
+/* hero intro */
+const scribPath = $("scrib");
+const scribLen = scribPath.getTotalLength();
+scribPath.style.strokeDasharray = scribLen;
+scribPath.style.strokeDashoffset = scribLen;
+gsap.timeline({defaults:{ease:"power4.out"}})
+  .to("h1 .row span", {y:0, duration:1.05, stagger:.14, delay:.15})
+  .to("#scrib", {strokeDashoffset:0, duration:.7, ease:"power2.inOut"}, "-=.35")
+  .to(".sub", {opacity:1, duration:.7}, "-=.3")
+  .to(".gen", {opacity:1, duration:.7}, "-=.45")
+  .to(".hint", {opacity:1, duration:.7}, "-=.5");
+
+/* scatter pieces that flee (and spin away from) the cursor */
+const SCAT = [];
+{
+  const host = $("scatter"), PIECES = "♞♟♛♜♝♚♘♙♕♖♗♔♞♟♜♝♛♚";
+  for (let i = 0; i < 18; i++){
+    const b = document.createElement("b");
+    b.textContent = PIECES[i % PIECES.length];
+    if (i % 3 === 0) b.className = "tint";
+    const x = 5 + Math.random() * 90, y = 3 + Math.random() * 90;
+    const rot = (Math.random() * 26 - 13).toFixed(1);
+    b.style.cssText = `left:${x}%;top:${y}%;font-size:${24 + Math.random() * 50}px;`;
+    b.dataset.rot = rot;
+    gsap.set(b, {rotation:+rot});
+    host.appendChild(b);
+    SCAT.push({el:b, baseRot:+rot,
+      qx:gsap.quickTo(b, "x", {duration:.8, ease:"power3.out"}),
+      qy:gsap.quickTo(b, "y", {duration:.8, ease:"power3.out"}),
+      qr:gsap.quickTo(b, "rotation", {duration:1.1, ease:"power2.out"})});
+  }
+}
+document.addEventListener("pointermove", e => {
+  const R = 165;
+  for (const p of SCAT){
+    const r = p.el.getBoundingClientRect();
+    const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    const dx = cx - e.clientX, dy = cy - e.clientY;
+    const d = Math.hypot(dx, dy) || 1;
+    if (d < R){
+      const f = (R - d) / R * 100;                 // stronger shove, closer = harder
+      p.qx(dx / d * f); p.qy(dy / d * f);
+      p.qr(p.baseRot + (dx > 0 ? 1 : -1) * (R - d) / R * 45);   // spin away
+    } else { p.qx(0); p.qy(0); p.qr(p.baseRot); }
+  }
+});
+
+/* sparkle trail */
+let lastSpark = 0;
+const SPARKC = ["#00D364", "#FF2E88", "#2E6BFF", "#FF7A00"];
+document.addEventListener("pointermove", e => {
+  const now = performance.now();
+  if (now - lastSpark < 55) return;
+  lastSpark = now;
+  const s = document.createElement("div");
+  s.className = "spark";
+  s.textContent = Math.random() < .5 ? "+" : "✦";
+  s.style.cssText = `left:${e.clientX}px;top:${e.clientY}px;color:${SPARKC[Math.random()*4|0]};` +
+    `font-size:${10 + Math.random() * 10}px`;
+  document.body.appendChild(s);
+  gsap.fromTo(s, {scale:1, opacity:.9, rotate:0},
+    {scale:.2, opacity:0, y:-16 - Math.random() * 14, rotate:Math.random() * 80 - 40,
+     duration:.65, ease:"power2.out", onComplete:() => s.remove()});
+});
+
+/* magnetic buttons */
+for (const el of document.querySelectorAll("#go, .actions button, .actions a")){
+  const qx = gsap.quickTo(el, "x", {duration:.35, ease:"power3.out"});
+  const qy = gsap.quickTo(el, "y", {duration:.35, ease:"power3.out"});
+  el.addEventListener("pointermove", e => {
+    const r = el.getBoundingClientRect();
+    qx((e.clientX - r.left - r.width / 2) * .3);
+    qy((e.clientY - r.top - r.height / 2) * .3);
+  });
+  el.addEventListener("pointerleave", () => {
+    gsap.to(el, {x:0, y:0, duration:.6, ease:"elastic.out(1,.45)"});
+  });
+}
+
+const LOADS = ["counting your blunders…","interviewing your pawns…","checking who you flagged…",
+  "weighing the bishops…","reading your opening diary…","calibrating the hype…"];
+let loadTimer;
+
+$("go").onclick = generate;
+$("uname").addEventListener("keydown", e => { if (e.key === "Enter") generate(); });
+$("again").onclick = () => { $("stage").classList.remove("show"); window.scrollTo({top:0, behavior:"smooth"}); };
+
+async function generate(){
+  const u = $("uname").value.trim();
+  $("err").textContent = "";
+  if (!u){ gsap.fromTo("#uname", {x:-8}, {x:0, duration:.4, ease:"elastic.out(1,.3)"}); return; }
+  $("stage").classList.add("show");
+  $("pack").style.display = "none"; $("spin").style.display = "none";
+  gsap.set(["#actions", "#spinhint"], {opacity:0});
+  $("stage").scrollIntoView({behavior:"smooth"});
+  let i = 0;
+  $("loadmsg").innerHTML = `<i>●</i> ${LOADS[0]}`;
+  clearInterval(loadTimer);
+  loadTimer = setInterval(() => $("loadmsg").innerHTML = `<i>●</i> ${LOADS[++i % LOADS.length]}`, 1100);
+  try{
+    const data = platform === "lichess" ? await fetchLichess(u) : await fetchChesscom(u);
+    const card = buildCard(data);
+    clearInterval(loadTimer); $("loadmsg").textContent = "";
+    showPack(data, card);
+  }catch(e){
+    clearInterval(loadTimer); $("loadmsg").textContent = "";
+    $("stage").classList.remove("show");
+    $("err").textContent = `Couldn't find "${u}" on ${platform === "lichess" ? "Lichess" : "Chess.com"} (or the API said no). Try again?`;
+    gsap.fromTo("#uname", {x:-9}, {x:0, duration:.5, ease:"elastic.out(1,.3)"});
+    window.scrollTo({top:0, behavior:"smooth"});
+  }
+}
+
+/* -------- cinematic pack opening -------- */
+function showPack(data, card){
+  const pack = $("pack");
+  pack.style.display = "flex";
+  gsap.fromTo(pack, {y:60, opacity:0, rotate:-3}, {y:0, opacity:1, rotate:0, duration:.7, ease:"back.out(1.6)"});
+  gsap.to(pack, {y:-8, duration:1.4, yoyo:true, repeat:-1, ease:"sine.inOut", delay:.7});
+  pack.onclick = () => {
+    pack.onclick = null;
+    gsap.killTweensOf(pack);
+    gsap.timeline()
+      .to(pack, {y:-16, rotate:-5, scale:1.05, duration:.32, ease:"power2.out"})        // wind up
+      .to(pack, {rotate:4, duration:.28, ease:"sine.inOut", yoyo:true, repeat:1})       // sway / anticipation
+      .to(pack, {y:0, rotate:0, scaleY:.9, scaleX:1.07, duration:.15, ease:"power2.in"}) // load the spring
+      .to(pack, {x:"+=6", duration:.045, repeat:11, yoyo:true, ease:"none"})            // rumble
+      .to(pack, {x:"+=13", duration:.035, repeat:9, yoyo:true, ease:"none"})            // harder rumble
+      .add(() => burst(card.tier, {count:26}))                                          // early puff
+      .to(pack, {scale:1.24, duration:.18, ease:"power3.in"})                           // burst open
+      .to("#flash", {opacity:1, duration:.06}, "<70%")
+      .add(() => { pack.style.display = "none"; burst(card.tier, {count:72}); shakeScreen(); walkout(data, card); })
+      .to("#flash", {opacity:0, duration:.55});
+  };
+}
+
+/* -------- FUT-style walkout: staged tells before the card --------
+   platform (≈position) → flag (nation) → title or archetype (≈club),
+   golden rising lines + rotating rays = the "walkout" tell for titled
+   players and legend/icon pulls. Silhouette, then the slam. */
+function walkout(data, card){
+  const wo = $("walkout"), item = $("woItem"), sil = $("woSil");
+  const flagEmoji = data.flag && /^[A-Za-z]{2}$/.test(data.flag)
+    ? String.fromCodePoint(...[...data.flag.toUpperCase()].map(ch => 0x1F1A5 + ch.charCodeAt(0))) : null;
+  const beats = [{label:"PLATFORM", text: data.platform === "lichess" ? "LICHESS" : "CHESS.COM"}];
+  if (flagEmoji) beats.push({label:"FEDERATION", text:flagEmoji, big:true});
+  beats.push(data.title ? {label:"TITLE", text:data.title, gold:true}
+                        : {label:"ARCHETYPE", text:card.arch});
+  const isWalkout = !!data.title || ["legend", "icon", "prime"].includes(card.tier);
+
+  wo.style.display = "flex";
+  sil.textContent = card.piece;
+  let raysSpin = null, done = false;
+  const finish = () => {
+    if (done) return;
+    done = true;
+    tl.kill();
+    if (raysSpin) raysSpin.kill();
+    gsap.set([item, sil, "#wo1", "#wo2", "#rays"], {clearProps:"all", opacity:0});
+    wo.style.display = "none";
+    wo.onpointerdown = null;
+    reveal(data, card);
+  };
+  wo.onpointerdown = finish;
+
+  const tl = gsap.timeline({onComplete:finish});
+  if (isWalkout){
+    raysSpin = gsap.to("#rays", {rotation:360, duration:14, repeat:-1, ease:"none"});
+    tl.to("#rays", {opacity:1, duration:.5}, 0)
+      .fromTo(["#wo1", "#wo2"], {scaleY:0, opacity:0}, {scaleY:1, opacity:1, duration:.6, ease:"power2.out"}, 0);
+  }
+  for (const b of beats){
+    tl.add(() => {
+      item.className = "wo-item" + (b.gold ? " gold" : "");
+      item.innerHTML = `<small>${b.label}</small>${b.text}`;
+      item.style.fontSize = b.big ? "84px" : "46px";
+      burst(card.tier, {count: b.gold ? 60 : 24});
+      if (b.gold) shakeScreen();
+    })
+    .fromTo(item, {scale:2.4, opacity:0}, {scale:1, opacity:1, duration:.32, ease:"power4.out"})
+    .to(item, {y:-70, opacity:0, duration:.26, ease:"power2.in", delay:.62})
+    .set(item, {y:0});
+  }
+  tl.fromTo(sil, {y:130, opacity:0, scale:.7}, {y:0, opacity:1, scale:1, duration:.55, ease:"power3.out"})
+    .to(sil, {opacity:0, scale:1.15, duration:.3, delay:.5, ease:"power2.in"});
+}
+
+function shakeScreen(){
+  gsap.fromTo("#shake", {x:0, y:0},
+    {x:"random(-9,9)", y:"random(-7,7)", duration:.05, repeat:8, yoyo:true,
+     ease:"none", onComplete:() => gsap.set("#shake", {x:0, y:0})});
+}
+
+/* -------- card reveal -------- */
+let idleTween = null, spinY = 0, spinX = 0, CURRENT = null;
+function reveal(data, card){
+  const spin = $("spin"), c = $("card");
+  spinY = 0; spinX = 0;
+  if (idleTween) idleTween.kill();
+  gsap.set(spin, {display:"block", rotationY:0, rotationX:0, y:0});
+  CURRENT = {data, card};
+  // reset any prior engine analysis state for the new card
+  if (typeof ANALYSIS !== "undefined" && ANALYSIS.running) ANALYSIS.abort = true;
+  const _db = $("deep"); if (_db){ _db.classList.remove("busy"); _db.innerHTML = "♟ Deep analysis";
+    _db.style.display = (data.rawGames && data.rawGames.length >= 3) ? "" : "none"; }
+  const _el = $("engline"); if (_el){ _el.classList.remove("show"); _el.innerHTML = ""; }
+  const tierClasses = "tier-" + card.tier + (card.rare ? " rare" : "") + (card.titled ? " titled" : "");
+  c.className = tierClasses;
+  $("cardback").className = "cardback " + tierClasses;
+  $("tierchip").textContent = card.tierName;
+  $("ovrNum").textContent = "0";
+  $("arch").textContent = card.arch;
+  $("platBadge").textContent = data.platform === "lichess" ? "LICHESS" : "CHESS.COM";
+  $("pieceArt").textContent = card.piece;
+  $("cardback").querySelector(".bigpc").textContent = card.piece;
+  $("cname").innerHTML = (data.title ? `<span class="t">${data.title}</span>` : "") + data.username;
+  const flag = data.flag && /^[A-Za-z]{2}$/.test(data.flag)
+    ? String.fromCodePoint(...[...data.flag.toUpperCase()].map(ch => 0x1F1A5 + ch.charCodeAt(0))) + " " : "";
+  $("cfoot-left").textContent = `${flag}${(data.totalGames || 0).toLocaleString()} games · top ${Math.max(0.1, Math.round((100 - card.pct) * 10) / 10)}%` +
+    (card.lowData ? " · LOW DATA" : ` · last ${card.sample}`) +
+    (card.dormant ? ` · last seen ${new Date(data.lastSeen).getFullYear()}` : "");
+  $("sgrid").innerHTML = Object.entries(card.stats).map(([k, v]) =>
+    `<div class="st" data-stat="${k}" role="button" tabindex="0" title="Why is my ${k} ${v}?">` +
+    `<b data-v="${v}">0</b><span>${k}</span><i><u></u></i></div>`).join("");
+
+  const tl = gsap.timeline();
+  tl.fromTo(spin, {y:"90vh", rotationY:45, scale:.4, opacity:0},
+      {y:0, rotationY:720, scale:1, opacity:1, duration:1.25, ease:"power4.out"})
+    .add(() => { burst(card.tier); shakeScreen(); }, "-=.25")
+    .fromTo("#ripple", {opacity:.9, scale:1}, {opacity:0, scale:1.35, duration:.8, ease:"power2.out"}, "-=.55")
+    .add(() => {
+      const num = {v:0};
+      gsap.to(num, {v:card.ovr, duration:.9, ease:"power2.out",
+        onUpdate:() => $("ovrNum").textContent = Math.round(num.v)});
+      document.querySelectorAll("#sgrid .st").forEach((el, idx) => {
+        const b = el.querySelector("b"), bar = el.querySelector("u"), v = +b.dataset.v;
+        const o = {v:0};
+        gsap.to(o, {v, duration:.65, delay:.25 + idx * .11, ease:"power2.out",
+          onUpdate:() => b.textContent = Math.round(o.v)});
+        gsap.to(bar, {width:(v / 99 * 100) + "%", duration:.65, delay:.25 + idx * .11, ease:"power3.out"});
+      });
+    }, "-=.35")
+    .to(["#actions", "#spinhint"], {opacity:1, duration:.6}, "+=.9")
+    .add(() => startIdle());
+}
+
+function startIdle(){
+  idleTween = gsap.to("#spin", {y:-10, duration:2.6, yoyo:true, repeat:-1, ease:"sine.inOut"});
+}
+
+/* -------- grabbable spin physics -------- */
+{
+  const spin = $("spin");
+  // armed = pointer is down; dragging only begins after real movement, so a
+  // simple tap passes through to the stat click (opens the explainer).
+  let armed = false, dragging = false, sx = 0, sy = 0, lx = 0, ly = 0, vx = 0, momentum = null, pid = null;
+  const render = () => gsap.set(spin, {rotationY:spinY, rotationX:spinX});
+  spin.addEventListener("pointerdown", e => {
+    armed = true; dragging = false; sx = lx = e.clientX; sy = ly = e.clientY; vx = 0; pid = e.pointerId;
+    if (momentum) momentum.kill();
+  });
+  spin.addEventListener("pointermove", e => {
+    if (!armed) return;
+    if (!dragging){
+      if (Math.hypot(e.clientX - sx, e.clientY - sy) < 5) return;   // still a tap
+      dragging = true;
+      spin.classList.add("grabbing");
+      try { spin.setPointerCapture(pid); } catch (_) {}
+      if (idleTween) idleTween.pause();
+    }
+    const dx = e.clientX - lx, dy = e.clientY - ly;
+    lx = e.clientX; ly = e.clientY;
+    spinY += dx * .55; vx = dx * .55;
+    spinX = clamp(spinX - dy * .25, -28, 28);
+    render();
+  });
+  const release = () => {
+    armed = false;
+    if (!dragging) return;
+    dragging = false;
+    spin.classList.remove("grabbing");
+    // momentum spin with friction, then settle to nearest face
+    momentum = gsap.to({}, {duration:3, ease:"none", onUpdate:function(){
+      vx *= .955;
+      spinY += vx;
+      spinX *= .94;
+      if (Math.abs(vx) < .25){
+        this.kill();
+        const target = Math.round(spinY / 180) * 180;
+        gsap.to({}, {duration:.001});
+        momentum = gsap.to({y:spinY, x:spinX}, {y:target, x:0, duration:.9, ease:"elastic.out(1,.5)",
+          onUpdate:function(){ spinY = this.targets()[0].y; spinX = this.targets()[0].x; render(); },
+          onComplete:() => { if (idleTween) idleTween.resume(); }});
+      }
+      render();
+    }});
+  };
+  spin.addEventListener("pointerup", release);
+  spin.addEventListener("pointercancel", release);
+}
+
+/* foil follows pointer over the card */
+document.addEventListener("pointermove", e => {
+  const c = $("card"), r = c.getBoundingClientRect();
+  if (!r.width) return;
+  c.style.setProperty("--mx", clamp((e.clientX - r.left) / r.width * 100, 0, 100) + "%");
+  c.style.setProperty("--my", clamp((e.clientY - r.top) / r.height * 100, 0, 100) + "%");
+});
+
+/* neon confetti burst */
+function burst(tier, opts = {}){
+  const cv = $("burst"), ctx = cv.getContext("2d");
+  cv.width = innerWidth; cv.height = innerHeight;
+  const colors = tier === "legend" ? ["#FF2E88","#00D364","#2E6BFF","#FF7A00","#101010"]
+    : tier === "icon" ? ["#C8901A","#8A6A1C","#FFE895","#101010"]
+    : tier === "prime" ? ["#E7C56A","#C8901A","#F6E4B0","#101010"]
+    : ["#00D364","#FF2E88","#2E6BFF","#101010"];
+  const ps = Array.from({length: opts.count ?? 170}, () => {
+    const a = Math.random() * Math.PI * 2, v = 5 + Math.random() * 13;
+    return {x:cv.width/2, y:cv.height/2 - 30, vx:Math.cos(a)*v, vy:Math.sin(a)*v - 4,
+            w:3 + Math.random()*6, h:6 + Math.random()*9, r:Math.random()*Math.PI,
+            vr:(Math.random()-.5)*.3, c:colors[Math.random()*colors.length|0], l:70 + Math.random()*50};
+  });
+  (function frame(){
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    let alive = false;
+    for (const p of ps){
+      if (p.l-- <= 0) continue;
+      alive = true;
+      p.x += p.vx; p.y += p.vy; p.vy += 0.22; p.vx *= .992; p.r += p.vr;
+      ctx.save();
+      ctx.translate(p.x, p.y); ctx.rotate(p.r);
+      ctx.globalAlpha = Math.max(0, p.l / 110);
+      ctx.fillStyle = p.c;
+      ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+      ctx.restore();
+    }
+    if (alive) requestAnimationFrame(frame);
+    else ctx.clearRect(0, 0, cv.width, cv.height);
+  })();
+}
+
+/* download */
+$("dl").onclick = async () => {
+  const spin = $("spin");
+  const prevY = spinY, prevX = spinX;
+  gsap.set(spin, {rotationY:0, rotationX:0, y:0});
+  if (idleTween) idleTween.pause();
+  const canvas = await html2canvas($("card"), {backgroundColor:null, scale:2});
+  gsap.set(spin, {rotationY:prevY, rotationX:prevX});
+  if (idleTween) idleTween.resume();
+  const a = document.createElement("a");
+  a.download = `chess-card-${$("cname").textContent.trim()}.png`;
+  a.href = canvas.toDataURL("image/png");
+  a.click();
+};
+
+/* -------- per-stat explainer -------- */
+const STAT_META = {
+  SPD:["SPEED","Clock handling — flagging, time scrambles, bullet strength."],
+  ATK:["ATTACK","How decisively you win — checkmates and converting winning games."],
+  DEF:["DEFENSE","How you hold up against clearly stronger opponents."],
+  END:["ENDGAME","How much better you play long games than short ones."],
+  OPN:["OPENINGS","Repertoire breadth and how rarely you get blown out early."],
+  CON:["CONTROL","Composure — how you score in the game right after a loss."],
+};
+function openStat(k){
+  if (!CURRENT || !STAT_META[k]) return;
+  const {card} = CURRENT, v = card.stats[k];
+  $("smName").textContent = STAT_META[k][0];
+  $("smMeasure").textContent = STAT_META[k][1];
+  $("smWhy").textContent = card.reasons[k] || "";
+  $("smMore").href = "how-stats-work.html#" + k;
+  $("smVal").textContent = "0"; $("smBar").style.width = "0%";
+  $("statModal").classList.add("show");
+  const o = {v:0};
+  gsap.to(o, {v, duration:.5, ease:"power2.out", onUpdate:() => $("smVal").textContent = Math.round(o.v)});
+  gsap.to($("smBar"), {width:(v / 99 * 100) + "%", duration:.55, ease:"power3.out"});
+}
+function closeStat(){ $("statModal").classList.remove("show"); }
+document.addEventListener("click", e => {
+  const st = e.target.closest("#sgrid .st");
+  if (st) openStat(st.dataset.stat);
+});
+$("sgrid").addEventListener("keydown", e => {
+  if ((e.key === "Enter" || e.key === " ") && e.target.dataset && e.target.dataset.stat){
+    e.preventDefault(); openStat(e.target.dataset.stat);
+  }
+});
+$("smClose").onclick = closeStat;
+$("statModal").addEventListener("click", e => { if (e.target.id === "statModal") closeStat(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeStat(); });
+
+/* ===================== DEEP ENGINE ANALYSIS (optional) =====================
+   Runs single-threaded Stockfish (WASM) in the browser to replace the four
+   result-relative stats (Attack, Defense, Endgame, Control) with real,
+   accuracy-anchored engine measurements. Skill falls out of centipawn loss,
+   so a strong player can't be out-scored by a flashy weak one. */
+const ENGINE_GAMES = 8;        // recent games to analyze
+const ENGINE_PLY_CAP = 54;     // stop after this many plies per game
+const ENGINE_START_PLY = 6;    // skip early book noise
+const ENGINE_MOVETIME = 90;    // ms per position — predictable wall-time
+
+const cpClamp = cp => Math.max(-1000, Math.min(1000, cp));
+const winPctCp = cp => 50 + 50 * (2 / (1 + Math.exp(-0.00368208 * cpClamp(cp))) - 1);
+const moveAcc = (wb, wa) => { const d = Math.max(0, wb - wa);
+  return Math.max(0, Math.min(100, 103.1668 * Math.exp(-0.04354 * d) - 3.1669)); };
+const ACC_ANCHORS = [[50,40],[60,46],[70,56],[78,66],[84,74],[89,82],[93,89],[96,94],[98,97],[99.5,99]];
+const lerpAnchor = (pts, x) => { if (x <= pts[0][0]) return pts[0][1];
+  for (let i = 1; i < pts.length; i++){ const [x1,y1]=pts[i-1],[x2,y2]=pts[i];
+    if (x <= x2) return y1 + (y2-y1)*(x-x1)/(x2-x1); } return pts[pts.length-1][1]; };
+const accToCard = a => Math.round(lerpAnchor(ACC_ANCHORS, a));
+const blendSkill = (skill, style) => clamp(Math.round(0.68 * skill + 0.32 * style), 40, 99);
+const controlScore = br => lerpAnchor([[0,99],[0.03,90],[0.06,82],[0.10,72],[0.18,58],[0.30,45],[0.5,40]], br);
+const attackScore = (sacRate, convFast, decisive) => clamp(Math.round(
+  lerpAnchor([[0,45],[0.15,60],[0.4,75],[0.8,88],[1.4,97]], sacRate) * 0.5 + convFast * 0.3 + decisive * 0.2), 0, 99);
+const defenseScore = (saveRate, defAccCard) => saveRate == null ? defAccCard
+  : clamp(Math.round(defAccCard * 0.5 + lerpAnchor([[0,40],[0.2,58],[0.4,72],[0.6,85],[0.85,97]], saveRate) * 0.5), 0, 99);
+
+const PIECE_VAL = {p:1,n:3,b:3,r:5,q:9};
+function fenMaterialUser(fen, userWhite){
+  const board = fen.split(" ")[0]; let w=0, b=0, np=0;
+  for (const ch of board){ const v = PIECE_VAL[ch.toLowerCase()]; if (!v) continue;
+    if (ch === ch.toUpperCase()) w += v; else b += v;
+    if ("nbrqNBRQ".includes(ch)) np++; }
+  return { user: userWhite ? w : b, nonPawn: np };
+}
+
+let ANALYSIS = { abort:false, running:false };
+
+/* Stockfish worker: try the wasm loader, fall back to the asm.js build. */
+function makeEngine(){
+  return new Promise((resolve, reject) => {
+    let tried = 0;
+    const boot = (file) => {
+      let sf;
+      try { sf = new Worker(file); } catch(e){ return nextOrFail(); }
+      let ready = false;
+      const to = setTimeout(() => { if (!ready){ try{sf.terminate();}catch(_){} nextOrFail(); } }, 9000);
+      sf.onerror = () => { if (!ready){ clearTimeout(to); nextOrFail(); } };
+      sf.onmessage = e => {
+        const line = typeof e.data === "string" ? e.data : (e.data && e.data.data) || "";
+        if (line.includes("uciok")){ ready = true; clearTimeout(to); sf.onerror = null; resolve(wrapEngine(sf)); }
+      };
+      try { sf.postMessage("uci"); } catch(_){ clearTimeout(to); nextOrFail(); }
+    };
+    const nextOrFail = () => { tried++; if (tried === 1) boot("stockfish.js"); else reject(new Error("engine failed")); };
+    boot("stockfish.wasm.js");
+  });
+}
+function wrapEngine(sf){
+  let pending = null, last = 0;
+  sf.onmessage = e => {
+    const line = typeof e.data === "string" ? e.data : (e.data && e.data.data) || "";
+    if (line.startsWith("info") && line.includes("score")){
+      const m = line.match(/score (cp|mate) (-?\d+)/);
+      if (m) last = m[1] === "mate" ? (Number(m[2]) > 0 ? 1000 : -1000) : Number(m[2]);
+    } else if (line.startsWith("bestmove")){ const r = pending; pending = null; if (r) r(last); }
+  };
+  return {
+    evalFen(fen){ return new Promise(res => { pending = res; last = 0;
+      sf.postMessage("position fen " + fen); sf.postMessage("go movetime " + ENGINE_MOVETIME); }); },
+    quit(){ try { sf.postMessage("quit"); sf.terminate(); } catch(_){} },
+  };
+}
+
+/* replay one game into positions with per-ply material */
+function gameToPositions(rg){
+  const Chess = window.Chess; if (!Chess) return null;
+  let sanList = rg.san;
+  if (!sanList){ try { const t = new Chess(); t.load_pgn(rg.pgn); sanList = t.history(); } catch(_){ return null; } }
+  if (!sanList || sanList.length < 16) return null;
+  const c = new Chess();
+  const pos = [{ fen: c.fen(), userMat: fenMaterialUser(c.fen(), rg.userWhite) }];
+  for (const san of sanList){ if (!c.move(san)) break;
+    pos.push({ fen: c.fen(), userMat: fenMaterialUser(c.fen(), rg.userWhite) }); }
+  return { pos, userWhite: rg.userWhite, result: rg.result };
+}
+
+async function analyzeOneGame(eng, g){
+  const { pos, userWhite, result } = g;
+  const end = Math.min(pos.length - 1, ENGINE_PLY_CAP);
+  const from = Math.max(1, ENGINE_START_PLY - 1);
+  const evalUser = new Array(pos.length).fill(null);
+  for (let i = from; i <= end; i++){
+    if (ANALYSIS.abort) return null;
+    const cp = await eng.evalFen(pos[i].fen);
+    const stm = pos[i].fen.split(" ")[1];
+    evalUser[i] = ((stm === "w") === userWhite) ? cp : -cp;
+  }
+  const moves = []; let minWin = 50, reachedWinAt = null;
+  for (let i = from; i < end; i++){
+    const stm = pos[i].fen.split(" ")[1];
+    if (((stm === "w") === userWhite) === false) continue;   // only user's moves
+    if (evalUser[i] == null || evalUser[i+1] == null) continue;
+    const wb = winPctCp(evalUser[i]), wa = winPctCp(evalUser[i+1]);
+    const before = pos[i].userMat.user;
+    const after2 = pos[i+2] ? pos[i+2].userMat.user : pos[i+1].userMat.user;
+    const sac = (after2 - before) <= -1.5 && wa >= wb - 6;
+    moves.push({ wb, wa, sac, end: pos[i+1].userMat.nonPawn <= 6 });
+    minWin = Math.min(minWin, wa);
+    if (reachedWinAt == null && evalUser[i+1] >= 200) reachedWinAt = i;
+  }
+  return { moves, result, minWin, reachedWinAt, endPly: end };
+}
+
+function deriveEngineStats(perGame){
+  const all = [], endMoves = [], defMoves = [];
+  let sacs = 0, blunders = 0, mistakes = 0;
+  let losingGames = 0, savedGames = 0, reachedWin = 0, wonReached = 0; const convPlies = [];
+  for (const g of perGame){
+    for (const m of g.moves){
+      all.push(m); if (m.end) endMoves.push(m); if (m.wb < 40) defMoves.push(m);
+      const drop = m.wb - m.wa;
+      if (drop >= 20) blunders++; else if (drop >= 10) mistakes++;
+      if (m.sac) sacs++;
+    }
+    if (g.minWin <= 30){ losingGames++; if (g.result !== "loss") savedGames++; }
+    if (g.reachedWinAt != null){ reachedWin++; if (g.result === "win") wonReached++;
+      convPlies.push(Math.max(1, g.endPly - g.reachedWinAt)); }
+  }
+  if (all.length < 20) return null;
+  const meanAcc = a => a.length ? a.reduce((s,m)=>s+moveAcc(m.wb,m.wa),0)/a.length : null;
+  const overallAcc = meanAcc(all);
+  const endAcc = endMoves.length >= 8 ? meanAcc(endMoves) : overallAcc - 3;
+  const defAccCard = defMoves.length >= 6 ? accToCard(meanAcc(defMoves)) : accToCard(overallAcc) - 4;
+  const blunderRate = (blunders + 0.5 * mistakes) / all.length;
+  const sacRate = sacs / perGame.length;
+  const saveRate = losingGames >= 2 ? savedGames / losingGames : null;
+  const convFast = convPlies.length ? Math.round(lerpAnchor([[3,96],[8,82],[16,66],[28,52],[45,42]],
+    convPlies.reduce((a,b)=>a+b,0)/convPlies.length)) : 55;
+  const decisive = reachedWin >= 2 ? Math.round(wonReached / reachedWin * 99) : 55;
+  const skill = accToCard(overallAcc);
+  return {
+    accuracy: Math.round(overallAcc),
+    stats: {
+      ATK: blendSkill(skill, attackScore(sacRate, convFast, decisive)),
+      DEF: blendSkill(skill, defenseScore(saveRate, defAccCard)),
+      END: clamp(Math.round(0.7 * accToCard(endAcc) + 0.3 * skill), 40, 99),
+      CON: blendSkill(skill, controlScore(blunderRate)),
+    },
+    detail: { overallAcc:+overallAcc.toFixed(1), endAcc:+endAcc.toFixed(1), blunderRate, sacRate,
+              saveRate, games: perGame.length, moves: all.length },
+  };
+}
+
+function showEng(html){ const e = $("engline"); e.innerHTML = html; e.classList.add("show"); }
+function resetDeepBtn(txt){ const b = $("deep"); b.classList.remove("busy"); b.innerHTML = txt || "♟ Deep analysis"; }
+
+async function runDeepAnalysis(){
+  if (!CURRENT || ANALYSIS.running) return;
+  const card = CURRENT.card, data = CURRENT.data;
+  if (card.engine){ showEng(`<b>Engine-verified.</b> Accuracy <b>${card.engine.accuracy}%</b> — already analyzed.`); return; }
+  if (!window.Chess){ showEng('<span class="warn">Analysis library still loading — try again in a second.</span>'); return; }
+  const raws = (data.rawGames || []).map(gameToPositions).filter(Boolean).slice(0, ENGINE_GAMES);
+  if (raws.length < 3){ showEng('<span class="warn">Not enough full recent games to analyze (need ~3+).</span>'); return; }
+  ANALYSIS = { abort:false, running:true };
+  resetDeepBtn('<span class="spin-ico">♟</span> Analyzing…'); $("deep").classList.add("busy");
+  showEng('Booting Stockfish… <span style="opacity:.7">(first run downloads ~2&nbsp;MB, then it\'s cached)</span>');
+  let eng;
+  try { eng = await makeEngine(); }
+  catch(e){ showEng('<span class="warn">Couldn\'t start the engine in this browser — your card keeps its quick stats.</span>');
+    ANALYSIS.running = false; resetDeepBtn(); return; }
+
+  const totalPos = raws.reduce((s, g) => s + (Math.min(g.pos.length - 1, ENGINE_PLY_CAP) - Math.max(1, ENGINE_START_PLY - 1) + 1), 0);
+  let donePos = 0;
+  const counting = { evalFen: async (fen) => { const v = await eng.evalFen(fen); donePos++;
+    if (donePos % 3 === 0){ const p = Math.min(100, donePos / totalPos * 100);
+      showEng(`Analyzing your games… <b>${Math.min(99, Math.round(p))}%</b>` +
+        `<span class="engbar"><u style="width:${p}%"></u></span>`); }
+    return v; } };
+  const perGame = [];
+  for (const g of raws){
+    if (ANALYSIS.abort) break;
+    const res = await analyzeOneGame(counting, g);
+    if (res && res.moves.length) perGame.push(res);
+  }
+  eng.quit();
+  if (ANALYSIS.abort){ ANALYSIS.running = false; return; }
+
+  const out = deriveEngineStats(perGame);
+  ANALYSIS.running = false;
+  if (!out){ showEng('<span class="warn">Analysis came back too thin — keeping quick stats.</span>'); resetDeepBtn(); return; }
+  applyEngineStats(out); resetDeepBtn("✓ Analyzed");
+}
+
+function applyEngineStats(res){
+  const card = CURRENT.card; card.engine = res; const d = res.detail;
+  for (const k of ["ATK","DEF","END","CON"]) card.stats[k] = res.stats[k];
+  card.reasons.ATK = `Engine-measured over ${d.games} games: sound sacrifices (${d.sacRate.toFixed(2)}/game that the engine judged didn't lose ground) plus how fast you convert winning positions. Skill sets the floor — attack adds the spread.`;
+  card.reasons.DEF = d.saveRate != null
+    ? `Engine-measured: you saved ${Math.round(d.saveRate * 100)}% of the games where Stockfish had you clearly losing (eval below −1.5), plus your accuracy while defending.`
+    : `Engine-measured from your accuracy while worse — not enough lost-then-held games for a save rate this batch.`;
+  card.reasons.END = `Engine-measured endgame accuracy: ${d.endAcc}% once the board simplifies (few pieces left). Real centipawn loss, not a guess.`;
+  card.reasons.CON = `Engine-measured: a blunder+mistake rate of ${(d.blunderRate * 100).toFixed(1)}% across ${d.moves} of your moves. Fewer big eval drops = more control.`;
+  document.querySelectorAll("#sgrid .st").forEach(el => {
+    const k = el.dataset.stat; if (!["ATK","DEF","END","CON"].includes(k)) return;
+    el.classList.add("engced");
+    const b = el.querySelector("b"), bar = el.querySelector("u"), v = card.stats[k];
+    b.dataset.v = v;
+    const o = { v: +b.textContent || 0 };
+    gsap.to(o, { v, duration:.7, ease:"power2.out", onUpdate:()=> b.textContent = Math.round(o.v) });
+    gsap.to(bar, { width:(v / 99 * 100) + "%", duration:.7, ease:"power3.out" });
+  });
+  if (!/ENGINE /.test($("cfoot-left").textContent)) $("cfoot-left").textContent += ` · ENGINE ${res.accuracy}%`;
+  burst(card.tier, {count:40}); shakeScreen();
+  showEng(`<b>Engine-verified.</b> Accuracy <b>${res.accuracy}%</b> over ${d.games} games · Attack, Defense, Endgame &amp; Control are now real. Tap a stat for the breakdown.`);
+}
+$("deep").onclick = runDeepAnalysis;
+
+/* expose engine for tests */
+if (typeof module !== "undefined") module.exports = {cdfPct, pctToCard, normLichess, normChesscom, behavior, buildCard};
+</script>
+</body>
+</html>

@@ -256,6 +256,21 @@
   .sm-foot{margin-top:20px;font-size:13.5px}
   .sm-foot a{color:var(--ink);font-weight:800}
 
+  /* deep-analysis button + engine readout */
+  #deep.busy{pointer-events:none}
+  #deep .spin-ico{display:inline-block;animation:sp 1s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  .engline{margin-top:16px;min-height:22px;font-size:13.5px;font-weight:700;letter-spacing:.03em;
+    color:var(--muted);text-align:center;max-width:460px;opacity:0;transition:opacity .3s}
+  .engline.show{opacity:1}
+  .engline b{color:var(--green-ink);font-weight:900}
+  .engline .warn{color:#D62828}
+  .engbar{display:inline-block;vertical-align:middle;width:150px;height:8px;border-radius:5px;
+    background:rgba(16,16,16,.10);overflow:hidden;margin-left:8px}
+  .engbar u{display:block;height:100%;width:0;border-radius:5px;text-decoration:none;
+    background:linear-gradient(90deg,var(--green),var(--green-ink))}
+  .st.engced b{color:var(--green-ink)}
+
   @media (prefers-reduced-motion: reduce){
     *,*::before,*::after{animation-duration:.001s !important;transition-duration:.001s !important}
     .parade,.scatter{display:none}
@@ -347,12 +362,15 @@
     </div>
     <div class="spin-hint" id="spinhint">GRAB &amp; THROW TO SPIN · TAP A STAT TO SEE WHY</div>
     <div class="actions" id="actions">
+      <button id="deep">♟ Deep analysis</button>
       <button id="dl" class="primary">Download PNG</button>
       <button id="again">New card</button>
       <a href="how-stats-work.html">How stats work →</a>
     </div>
-    <p class="finenote">Tap any stat to see why it's that number. Overall is calibrated to real rating
-    percentiles (Chess.com percentiles are approximate); the very top is spread by absolute rating so
+    <div class="engline" id="engline"></div>
+    <p class="finenote">Tap any stat to see why it's that number, or hit <b>Deep analysis</b> to run Stockfish
+    in your browser and get real engine-measured Attack, Defense, Endgame &amp; Control. Overall is calibrated
+    to rating percentiles (Chess.com percentiles are approximate); the very top is spread by absolute rating so
     world #1s outrank streamers. Titled players get a PRIME card. Dormant 1yr+ → ICON, 5yr+ → LEGEND.
     Unofficial fan project — not affiliated with Lichess, Chess.com, or any football game.</p>
   </section>
@@ -383,6 +401,7 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script type="module">import { Chess } from "./chess.min.js"; window.Chess = Chess;</script>
 <script>
 /* ============================= ENGINE-START ============================= */
 /* Rating→percentile anchors. Lichess prefers the live percentile from its
@@ -503,8 +522,9 @@ function behavior(gs){
 /* Plain-English "why is my stat this number" for the per-stat panel. */
 function statReasons(b){
   const r = b.raw || {}, pc = x => Math.round(x * 100);
+  const deep = " Quick estimate — hit Deep analysis to replace it with a real Stockfish measurement.";
   if (!b.n || b.n < 10){
-    const t = "Estimated from your rating — under 10 recent rated games, so behavior stats aren't computed yet. Play more rated games for a real read.";
+    const t = "Estimated from your rating — under 10 recent rated games." + deep;
     return {SPD:t, ATK:t, DEF:t, END:t, OPN:t, CON:t};
   }
   return {
@@ -514,18 +534,17 @@ function statReasons(b){
          : b.flagRate > 0.30 ? "The clock is costing you; that's what caps it."
          : "Middle of the pack on the clock.")
       : "Set from your bullet rating — not enough flagged losses to measure directly.",
-    ATK: `How decisively you win: ${pc(r.mateRate || 0)}% of your wins end in checkmate, and you win ${pc(r.winRate || 0)}% of games overall. Higher = you go for the kill instead of grinding.`,
-    DEF: r.defScore != null
-      ? `Your score vs clearly higher-rated opponents (${r.vsHigherN} such games): ${pc(r.defScore)}%. Holding stronger players lifts this; getting run over drops it.`
-      : "Not enough games vs higher-rated opponents to measure — set from your rating.",
-    END: r.endScore != null
-      ? `In long games (70+ plies, ${r.longN} of them) you score ${pc(r.endScore)}% vs ${pc(r.overall)}% overall. Doing better the longer the game runs = a real endgame.`
-      : "Not enough long games to measure your endgame directly.",
+    ATK: `Anchored to your rating, tilted by how decisively you win — ${pc(r.mateRate || 0)}% of your wins end in checkmate.` + deep,
+    DEF: (r.defScore != null
+      ? `Anchored to your rating, tilted by your score vs clearly stronger opponents (${pc(r.defScore)}% over ${r.vsHigherN} games).`
+      : `Anchored to your rating — not enough games vs stronger opponents to tilt it yet.`) + deep,
+    END: (r.endScore != null
+      ? `Anchored to your rating, tilted by how you do in long games (70+ plies): ${pc(r.endScore)}% vs ${pc(r.overall)}% overall.`
+      : `Anchored to your rating — not enough long games to tilt it yet.`) + deep,
     OPN: `${r.distinctEco} distinct openings across ${b.n} games, and only ${pc(r.earlyLossRate)}% were quick losses. Variety plus not getting blown out early = prepared.`,
-    CON: r.tilt != null
-      ? `Right after a loss you score ${pc((r.overall || 0) + r.tilt)}% vs a ${pc(r.overall)}% baseline. ` +
-        (r.tilt >= 0 ? "You don't tilt — you bounce straight back." : "You dip after losses; that's tilt.")
-      : "Not enough back-to-back games after a loss to measure tilt.",
+    CON: (r.tilt != null
+      ? `Anchored to your rating, tilted by how you score right after a loss (${pc((r.overall || 0) + r.tilt)}% vs a ${pc(r.overall)}% baseline).`
+      : `Anchored to your rating — not enough back-to-back games to measure tilt yet.`) + deep,
   };
 }
 
@@ -551,17 +570,17 @@ function buildCard(o){
       stats[k] = clamp(base + off[k], 40, 99);
     }
   } else {
-    // Behavior stats are relative-to-self, which unfairly flattens elite
-    // accounts — floor them a fixed distance below the rating-derived card.
-    const floor = baseCard - 18;
+    // Sub-stats are skill-ANCHORED (rating dominates) with a light style tilt,
+    // so a strong player always out-ranks a weak one even before engine work.
+    // Deep Analysis later replaces ATK/DEF/END/CON with real Stockfish numbers.
     const spdBase = pctToCard(pcts.bullet) ?? baseCard - 4;
-    const fb = baseCard - 3;
+    const mix = (style, w) => style == null ? baseCard - 3
+      : clamp(Math.round((1 - w) * baseCard + w * style), 40, 99);
     stats = {
-      SPD: Math.round(spdBase + (b.flagRate == null ? 0 : (0.35 - b.flagRate) * 18)),
-      ATK: b.ATK ?? fb, DEF: b.DEF ?? fb, END: b.END ?? fb,
-      OPN: b.OPN ?? fb, CON: b.CON ?? fb,
+      SPD: clamp(Math.round(spdBase + (b.flagRate == null ? 0 : (0.35 - b.flagRate) * 16)), 40, 99),
+      ATK: mix(b.ATK, 0.32), DEF: mix(b.DEF, 0.32), END: mix(b.END, 0.32),
+      OPN: mix(b.OPN, 0.40), CON: mix(b.CON, 0.32),
     };
-    for (const k in stats) stats[k] = clamp(Math.max(stats[k], floor), 40, 99);
   }
   const avg = Object.values(stats).reduce((a, x) => a + x, 0) / 6;
   let ovr = lowData ? baseCard : clamp(Math.round(0.78 * baseCard + 0.22 * avg), 40, 99);
@@ -624,13 +643,23 @@ async function fetchLichess(u){
     {headers:{Accept:"application/x-ndjson"}});
   const text = await nd.text();
   const uname = user.username.toLowerCase();
-  const games = text.trim().split("\n").filter(Boolean).map(l => normLichess(JSON.parse(l), uname));
+  const parsed = text.trim().split("\n").filter(Boolean).map(l => JSON.parse(l));
+  const games = parsed.map(g => normLichess(g, uname));
+  // raw move lists (newest first) for optional engine analysis
+  const rawGames = parsed.slice(0, ENGINE_GAMES).map(g => {
+    const userWhite = (g.players.white?.user?.name || "").toLowerCase() === uname;
+    return {
+      san: (g.moves || "").split(" ").filter(Boolean),
+      userWhite,
+      result: g.winner == null ? "draw" : ((g.winner === "white") === userWhite ? "win" : "loss"),
+    };
+  }).filter(g => g.san.length >= 16);
   return {
     platform:"lichess", username:user.username, title:user.title || null,
     lastSeen:user.seenAt ?? null,
     flag:user.profile?.flag || null, totalGames:user.count?.rated ?? user.count?.all,
     ratings:{blitz:user.perfs?.blitz?.rating, rapid:user.perfs?.rapid?.rating, bullet:user.perfs?.bullet?.rating},
-    livePct, games,
+    livePct, games, rawGames,
   };
 }
 
@@ -646,13 +675,23 @@ async function fetchChesscom(u){
   const uname = prof.username.toLowerCase();
   const total = ["chess_blitz","chess_rapid","chess_bullet"].reduce((s, k) => {
     const r = st[k]?.record; return s + (r ? r.win + r.loss + r.draw : 0); }, 0);
+  const draws = ["agreed","repetition","stalemate","insufficient","50move","timevsinsufficient"];
+  const rawGames = raw.slice(-ENGINE_GAMES).reverse().map(g => {
+    const userWhite = g.white.username.toLowerCase() === uname;
+    const me = userWhite ? g.white : g.black;
+    return {
+      pgn: g.pgn || "",
+      userWhite,
+      result: me.result === "win" ? "win" : draws.includes(me.result) ? "draw" : "loss",
+    };
+  }).filter(g => g.pgn);
   return {
     platform:"chesscom", username:prof.username, title:prof.title || null,
     lastSeen:prof.last_online ? prof.last_online * 1000 : null,
     flag:(prof.country || "").split("/").pop() || null, totalGames:total,
     ratings:{blitz:st.chess_blitz?.last?.rating, rapid:st.chess_rapid?.last?.rating, bullet:st.chess_bullet?.last?.rating},
     livePct:{blitz:null, rapid:null, bullet:null},
-    games: raw.slice(-120).map(g => normChesscom(g, uname)),
+    games: raw.slice(-120).map(g => normChesscom(g, uname)), rawGames,
   };
 }
 
@@ -865,6 +904,11 @@ function reveal(data, card){
   if (idleTween) idleTween.kill();
   gsap.set(spin, {display:"block", rotationY:0, rotationX:0, y:0});
   CURRENT = {data, card};
+  // reset any prior engine analysis state for the new card
+  if (typeof ANALYSIS !== "undefined" && ANALYSIS.running) ANALYSIS.abort = true;
+  const _db = $("deep"); if (_db){ _db.classList.remove("busy"); _db.innerHTML = "♟ Deep analysis";
+    _db.style.display = (data.rawGames && data.rawGames.length >= 3) ? "" : "none"; }
+  const _el = $("engline"); if (_el){ _el.classList.remove("show"); _el.innerHTML = ""; }
   const tierClasses = "tier-" + card.tier + (card.rare ? " rare" : "") + (card.titled ? " titled" : "");
   c.className = tierClasses;
   $("cardback").className = "cardback " + tierClasses;
@@ -1051,6 +1095,223 @@ $("sgrid").addEventListener("keydown", e => {
 $("smClose").onclick = closeStat;
 $("statModal").addEventListener("click", e => { if (e.target.id === "statModal") closeStat(); });
 document.addEventListener("keydown", e => { if (e.key === "Escape") closeStat(); });
+
+/* ===================== DEEP ENGINE ANALYSIS (optional) =====================
+   Runs single-threaded Stockfish (WASM) in the browser to replace the four
+   result-relative stats (Attack, Defense, Endgame, Control) with real,
+   accuracy-anchored engine measurements. Skill falls out of centipawn loss,
+   so a strong player can't be out-scored by a flashy weak one. */
+const ENGINE_GAMES = 8;        // recent games to analyze
+const ENGINE_PLY_CAP = 54;     // stop after this many plies per game
+const ENGINE_START_PLY = 6;    // skip early book noise
+const ENGINE_MOVETIME = 90;    // ms per position — predictable wall-time
+
+const cpClamp = cp => Math.max(-1000, Math.min(1000, cp));
+const winPctCp = cp => 50 + 50 * (2 / (1 + Math.exp(-0.00368208 * cpClamp(cp))) - 1);
+const moveAcc = (wb, wa) => { const d = Math.max(0, wb - wa);
+  return Math.max(0, Math.min(100, 103.1668 * Math.exp(-0.04354 * d) - 3.1669)); };
+const ACC_ANCHORS = [[50,40],[60,46],[70,56],[78,66],[84,74],[89,82],[93,89],[96,94],[98,97],[99.5,99]];
+const lerpAnchor = (pts, x) => { if (x <= pts[0][0]) return pts[0][1];
+  for (let i = 1; i < pts.length; i++){ const [x1,y1]=pts[i-1],[x2,y2]=pts[i];
+    if (x <= x2) return y1 + (y2-y1)*(x-x1)/(x2-x1); } return pts[pts.length-1][1]; };
+const accToCard = a => Math.round(lerpAnchor(ACC_ANCHORS, a));
+const blendSkill = (skill, style) => clamp(Math.round(0.68 * skill + 0.32 * style), 40, 99);
+const controlScore = br => lerpAnchor([[0,99],[0.03,90],[0.06,82],[0.10,72],[0.18,58],[0.30,45],[0.5,40]], br);
+const attackScore = (sacRate, convFast, decisive) => clamp(Math.round(
+  lerpAnchor([[0,45],[0.15,60],[0.4,75],[0.8,88],[1.4,97]], sacRate) * 0.5 + convFast * 0.3 + decisive * 0.2), 0, 99);
+const defenseScore = (saveRate, defAccCard) => saveRate == null ? defAccCard
+  : clamp(Math.round(defAccCard * 0.5 + lerpAnchor([[0,40],[0.2,58],[0.4,72],[0.6,85],[0.85,97]], saveRate) * 0.5), 0, 99);
+
+const PIECE_VAL = {p:1,n:3,b:3,r:5,q:9};
+function fenMaterialUser(fen, userWhite){
+  const board = fen.split(" ")[0]; let w=0, b=0, np=0;
+  for (const ch of board){ const v = PIECE_VAL[ch.toLowerCase()]; if (!v) continue;
+    if (ch === ch.toUpperCase()) w += v; else b += v;
+    if ("nbrqNBRQ".includes(ch)) np++; }
+  return { user: userWhite ? w : b, nonPawn: np };
+}
+
+let ANALYSIS = { abort:false, running:false };
+
+/* Stockfish worker: try the wasm loader, fall back to the asm.js build. */
+function makeEngine(){
+  return new Promise((resolve, reject) => {
+    let tried = 0;
+    const boot = (file) => {
+      let sf;
+      try { sf = new Worker(file); } catch(e){ return nextOrFail(); }
+      let ready = false;
+      const to = setTimeout(() => { if (!ready){ try{sf.terminate();}catch(_){} nextOrFail(); } }, 9000);
+      sf.onerror = () => { if (!ready){ clearTimeout(to); nextOrFail(); } };
+      sf.onmessage = e => {
+        const line = typeof e.data === "string" ? e.data : (e.data && e.data.data) || "";
+        if (line.includes("uciok")){ ready = true; clearTimeout(to); sf.onerror = null; resolve(wrapEngine(sf)); }
+      };
+      try { sf.postMessage("uci"); } catch(_){ clearTimeout(to); nextOrFail(); }
+    };
+    const nextOrFail = () => { tried++; if (tried === 1) boot("stockfish.js"); else reject(new Error("engine failed")); };
+    boot("stockfish.wasm.js");
+  });
+}
+function wrapEngine(sf){
+  let pending = null, last = 0;
+  sf.onmessage = e => {
+    const line = typeof e.data === "string" ? e.data : (e.data && e.data.data) || "";
+    if (line.startsWith("info") && line.includes("score")){
+      const m = line.match(/score (cp|mate) (-?\d+)/);
+      if (m) last = m[1] === "mate" ? (Number(m[2]) > 0 ? 1000 : -1000) : Number(m[2]);
+    } else if (line.startsWith("bestmove")){ const r = pending; pending = null; if (r) r(last); }
+  };
+  return {
+    evalFen(fen){ return new Promise(res => { pending = res; last = 0;
+      sf.postMessage("position fen " + fen); sf.postMessage("go movetime " + ENGINE_MOVETIME); }); },
+    quit(){ try { sf.postMessage("quit"); sf.terminate(); } catch(_){} },
+  };
+}
+
+/* replay one game into positions with per-ply material */
+function gameToPositions(rg){
+  const Chess = window.Chess; if (!Chess) return null;
+  let sanList = rg.san;
+  if (!sanList){ try { const t = new Chess(); t.load_pgn(rg.pgn); sanList = t.history(); } catch(_){ return null; } }
+  if (!sanList || sanList.length < 16) return null;
+  const c = new Chess();
+  const pos = [{ fen: c.fen(), userMat: fenMaterialUser(c.fen(), rg.userWhite) }];
+  for (const san of sanList){ if (!c.move(san)) break;
+    pos.push({ fen: c.fen(), userMat: fenMaterialUser(c.fen(), rg.userWhite) }); }
+  return { pos, userWhite: rg.userWhite, result: rg.result };
+}
+
+async function analyzeOneGame(eng, g){
+  const { pos, userWhite, result } = g;
+  const end = Math.min(pos.length - 1, ENGINE_PLY_CAP);
+  const from = Math.max(1, ENGINE_START_PLY - 1);
+  const evalUser = new Array(pos.length).fill(null);
+  for (let i = from; i <= end; i++){
+    if (ANALYSIS.abort) return null;
+    const cp = await eng.evalFen(pos[i].fen);
+    const stm = pos[i].fen.split(" ")[1];
+    evalUser[i] = ((stm === "w") === userWhite) ? cp : -cp;
+  }
+  const moves = []; let minWin = 50, reachedWinAt = null;
+  for (let i = from; i < end; i++){
+    const stm = pos[i].fen.split(" ")[1];
+    if (((stm === "w") === userWhite) === false) continue;   // only user's moves
+    if (evalUser[i] == null || evalUser[i+1] == null) continue;
+    const wb = winPctCp(evalUser[i]), wa = winPctCp(evalUser[i+1]);
+    const before = pos[i].userMat.user;
+    const after2 = pos[i+2] ? pos[i+2].userMat.user : pos[i+1].userMat.user;
+    const sac = (after2 - before) <= -1.5 && wa >= wb - 6;
+    moves.push({ wb, wa, sac, end: pos[i+1].userMat.nonPawn <= 6 });
+    minWin = Math.min(minWin, wa);
+    if (reachedWinAt == null && evalUser[i+1] >= 200) reachedWinAt = i;
+  }
+  return { moves, result, minWin, reachedWinAt, endPly: end };
+}
+
+function deriveEngineStats(perGame){
+  const all = [], endMoves = [], defMoves = [];
+  let sacs = 0, blunders = 0, mistakes = 0;
+  let losingGames = 0, savedGames = 0, reachedWin = 0, wonReached = 0; const convPlies = [];
+  for (const g of perGame){
+    for (const m of g.moves){
+      all.push(m); if (m.end) endMoves.push(m); if (m.wb < 40) defMoves.push(m);
+      const drop = m.wb - m.wa;
+      if (drop >= 20) blunders++; else if (drop >= 10) mistakes++;
+      if (m.sac) sacs++;
+    }
+    if (g.minWin <= 30){ losingGames++; if (g.result !== "loss") savedGames++; }
+    if (g.reachedWinAt != null){ reachedWin++; if (g.result === "win") wonReached++;
+      convPlies.push(Math.max(1, g.endPly - g.reachedWinAt)); }
+  }
+  if (all.length < 20) return null;
+  const meanAcc = a => a.length ? a.reduce((s,m)=>s+moveAcc(m.wb,m.wa),0)/a.length : null;
+  const overallAcc = meanAcc(all);
+  const endAcc = endMoves.length >= 8 ? meanAcc(endMoves) : overallAcc - 3;
+  const defAccCard = defMoves.length >= 6 ? accToCard(meanAcc(defMoves)) : accToCard(overallAcc) - 4;
+  const blunderRate = (blunders + 0.5 * mistakes) / all.length;
+  const sacRate = sacs / perGame.length;
+  const saveRate = losingGames >= 2 ? savedGames / losingGames : null;
+  const convFast = convPlies.length ? Math.round(lerpAnchor([[3,96],[8,82],[16,66],[28,52],[45,42]],
+    convPlies.reduce((a,b)=>a+b,0)/convPlies.length)) : 55;
+  const decisive = reachedWin >= 2 ? Math.round(wonReached / reachedWin * 99) : 55;
+  const skill = accToCard(overallAcc);
+  return {
+    accuracy: Math.round(overallAcc),
+    stats: {
+      ATK: blendSkill(skill, attackScore(sacRate, convFast, decisive)),
+      DEF: blendSkill(skill, defenseScore(saveRate, defAccCard)),
+      END: clamp(Math.round(0.7 * accToCard(endAcc) + 0.3 * skill), 40, 99),
+      CON: blendSkill(skill, controlScore(blunderRate)),
+    },
+    detail: { overallAcc:+overallAcc.toFixed(1), endAcc:+endAcc.toFixed(1), blunderRate, sacRate,
+              saveRate, games: perGame.length, moves: all.length },
+  };
+}
+
+function showEng(html){ const e = $("engline"); e.innerHTML = html; e.classList.add("show"); }
+function resetDeepBtn(txt){ const b = $("deep"); b.classList.remove("busy"); b.innerHTML = txt || "♟ Deep analysis"; }
+
+async function runDeepAnalysis(){
+  if (!CURRENT || ANALYSIS.running) return;
+  const card = CURRENT.card, data = CURRENT.data;
+  if (card.engine){ showEng(`<b>Engine-verified.</b> Accuracy <b>${card.engine.accuracy}%</b> — already analyzed.`); return; }
+  if (!window.Chess){ showEng('<span class="warn">Analysis library still loading — try again in a second.</span>'); return; }
+  const raws = (data.rawGames || []).map(gameToPositions).filter(Boolean).slice(0, ENGINE_GAMES);
+  if (raws.length < 3){ showEng('<span class="warn">Not enough full recent games to analyze (need ~3+).</span>'); return; }
+  ANALYSIS = { abort:false, running:true };
+  resetDeepBtn('<span class="spin-ico">♟</span> Analyzing…'); $("deep").classList.add("busy");
+  showEng('Booting Stockfish… <span style="opacity:.7">(first run downloads ~2&nbsp;MB, then it\'s cached)</span>');
+  let eng;
+  try { eng = await makeEngine(); }
+  catch(e){ showEng('<span class="warn">Couldn\'t start the engine in this browser — your card keeps its quick stats.</span>');
+    ANALYSIS.running = false; resetDeepBtn(); return; }
+
+  const totalPos = raws.reduce((s, g) => s + (Math.min(g.pos.length - 1, ENGINE_PLY_CAP) - Math.max(1, ENGINE_START_PLY - 1) + 1), 0);
+  let donePos = 0;
+  const counting = { evalFen: async (fen) => { const v = await eng.evalFen(fen); donePos++;
+    if (donePos % 3 === 0){ const p = Math.min(100, donePos / totalPos * 100);
+      showEng(`Analyzing your games… <b>${Math.min(99, Math.round(p))}%</b>` +
+        `<span class="engbar"><u style="width:${p}%"></u></span>`); }
+    return v; } };
+  const perGame = [];
+  for (const g of raws){
+    if (ANALYSIS.abort) break;
+    const res = await analyzeOneGame(counting, g);
+    if (res && res.moves.length) perGame.push(res);
+  }
+  eng.quit();
+  if (ANALYSIS.abort){ ANALYSIS.running = false; return; }
+
+  const out = deriveEngineStats(perGame);
+  ANALYSIS.running = false;
+  if (!out){ showEng('<span class="warn">Analysis came back too thin — keeping quick stats.</span>'); resetDeepBtn(); return; }
+  applyEngineStats(out); resetDeepBtn("✓ Analyzed");
+}
+
+function applyEngineStats(res){
+  const card = CURRENT.card; card.engine = res; const d = res.detail;
+  for (const k of ["ATK","DEF","END","CON"]) card.stats[k] = res.stats[k];
+  card.reasons.ATK = `Engine-measured over ${d.games} games: sound sacrifices (${d.sacRate.toFixed(2)}/game that the engine judged didn't lose ground) plus how fast you convert winning positions. Skill sets the floor — attack adds the spread.`;
+  card.reasons.DEF = d.saveRate != null
+    ? `Engine-measured: you saved ${Math.round(d.saveRate * 100)}% of the games where Stockfish had you clearly losing (eval below −1.5), plus your accuracy while defending.`
+    : `Engine-measured from your accuracy while worse — not enough lost-then-held games for a save rate this batch.`;
+  card.reasons.END = `Engine-measured endgame accuracy: ${d.endAcc}% once the board simplifies (few pieces left). Real centipawn loss, not a guess.`;
+  card.reasons.CON = `Engine-measured: a blunder+mistake rate of ${(d.blunderRate * 100).toFixed(1)}% across ${d.moves} of your moves. Fewer big eval drops = more control.`;
+  document.querySelectorAll("#sgrid .st").forEach(el => {
+    const k = el.dataset.stat; if (!["ATK","DEF","END","CON"].includes(k)) return;
+    el.classList.add("engced");
+    const b = el.querySelector("b"), bar = el.querySelector("u"), v = card.stats[k];
+    b.dataset.v = v;
+    const o = { v: +b.textContent || 0 };
+    gsap.to(o, { v, duration:.7, ease:"power2.out", onUpdate:()=> b.textContent = Math.round(o.v) });
+    gsap.to(bar, { width:(v / 99 * 100) + "%", duration:.7, ease:"power3.out" });
+  });
+  if (!/ENGINE /.test($("cfoot-left").textContent)) $("cfoot-left").textContent += ` · ENGINE ${res.accuracy}%`;
+  burst(card.tier, {count:40}); shakeScreen();
+  showEng(`<b>Engine-verified.</b> Accuracy <b>${res.accuracy}%</b> over ${d.games} games · Attack, Defense, Endgame &amp; Control are now real. Tap a stat for the breakdown.`);
+}
+$("deep").onclick = runDeepAnalysis;
 
 /* expose engine for tests */
 if (typeof module !== "undefined") module.exports = {cdfPct, pctToCard, normLichess, normChesscom, behavior, buildCard};

@@ -59,6 +59,15 @@
   <p class="lede">Every number on your card is computed from your real, recent rated games —
   no vibes. Here's exactly what each one measures and how it's built.</p>
 
+  <div class="how" style="border-color:var(--green-ink);box-shadow:5px 5px 0 #BFEFD6">
+    <b>TWO LEVELS OF DEPTH</b>
+    Your card first shows <b>quick stats</b>: your rating sets the number, and your playing style
+    tilts it up or down. Because matchmaking pins almost everyone near a 50% win rate, we never let
+    style-only signals decide strength — rating anchors it, so a world #1 always out-scores a strong
+    amateur. Hit <b>Deep analysis</b> and Stockfish runs in your browser over your recent games to
+    replace Attack, Defense, Endgame and Control with real, engine-measured values (below).
+  </div>
+
   <div class="toc">
     <a href="#overall">Overall</a>
     <a href="#SPD">Speed</a>
@@ -67,6 +76,7 @@
     <a href="#END">Endgame</a>
     <a href="#OPN">Openings</a>
     <a href="#CON">Control</a>
+    <a href="#deep">Deep analysis</a>
     <a href="#tiers">Card tiers</a>
   </div>
 
@@ -79,7 +89,7 @@
     Percentiles flatten at the very top: a 2500 and a 2900 both read as "roughly 99th percentile," which
     is why a strong streamer and a world #1 used to tie at 96. So above the elite line the card switches to
     <b>absolute rating</b> to spread the top back out — 2700 ≠ 2800 ≠ 2900. World #1s land 98–99; very strong
-    titled players sit a notch below.</p>
+    titled players sit a notch below.</div>
     <p>A <b>title</b> (GM, IM, FM…) is permanent proof of strength that fast ratings understate, so titled
     players get a rating floor: an equal-rated amateur will never out-card a titled player.</p>
     <p class="honest">Honest caveat: Chess.com doesn't publish percentiles, so those curves are approximate.
@@ -99,27 +109,32 @@
   <section id="ATK">
     <div class="stat-h"><span class="pc">♛</span><h2>Attack</h2><span class="tag">AGGRESSION</span></div>
     <p class="measure">How decisively you win — checkmates and converting winning games.</p>
-    <div class="how"><b>How it's computed</b>
-    Built from your <b>checkmate rate</b> (share of wins that end in mate rather than resignation/flag) and your
-    overall <b>win rate</b>. Going for the kill and finishing games on the board pushes Attack up.</div>
+    <div class="how"><b>Quick stat</b>
+    Your rating, tilted by how decisively you win (checkmate rate and win rate).</div>
+    <div class="how"><b>With Deep analysis</b>
+    Stockfish looks for <b>sound sacrifices</b> — moves where you give up material but the engine says the
+    position held or improved — and how quickly you <b>convert winning positions</b>. A weak player's
+    "sacrifices" mostly just lose, so they don't count; that's why attack still tracks strength.</div>
   </section>
 
   <section id="DEF">
     <div class="stat-h"><span class="pc">♜</span><h2>Defense</h2><span class="tag">RESILIENCE</span></div>
     <p class="measure">How you hold up against clearly stronger opponents.</p>
-    <div class="how"><b>How it's computed</b>
-    Your score in games versus opponents rated <b>25+ points above you</b>. Holding or beating stronger players
-    lifts Defense; getting run over drops it.</div>
-    <p class="honest">Needs ~8 games vs higher-rated opponents to measure; otherwise it's estimated from your rating.</p>
+    <div class="how"><b>Quick stat</b>
+    Your rating, tilted by your score against opponents rated 25+ points above you.</div>
+    <div class="how"><b>With Deep analysis</b>
+    Your <b>save rate</b>: when Stockfish says you were clearly losing (eval below −1.5), how often you
+    clawed the game back to a draw or win — plus how accurately you play while worse.</div>
   </section>
 
   <section id="END">
     <div class="stat-h"><span class="pc">♚</span><h2>Endgame</h2><span class="tag">GRIND</span></div>
     <p class="measure">How much better you play long games than short ones.</p>
-    <div class="how"><b>How it's computed</b>
-    Your score in <b>long games (70+ plies)</b> compared to your baseline score. If you do <i>better</i> the
-    longer a game runs, you've got a real endgame — and Endgame rewards exactly that.</div>
-    <p class="honest">Needs ~8 long games to measure directly.</p>
+    <div class="how"><b>Quick stat</b>
+    Your rating, tilted by how you score in long games (70+ plies) vs your baseline.</div>
+    <div class="how"><b>With Deep analysis</b>
+    Your real <b>accuracy in the endgame phase</b> — measured from centipawn loss once the board simplifies
+    (few pieces left), separately from your middlegame. Playing clean endings lifts it directly.</div>
   </section>
 
   <section id="OPN">
@@ -134,10 +149,26 @@
   <section id="CON">
     <div class="stat-h"><span class="pc">♟</span><h2>Control</h2><span class="tag">COMPOSURE</span></div>
     <p class="measure">Composure — how you score in the game right after a loss.</p>
-    <div class="how"><b>How it's computed</b>
-    Your win/draw score in every game that immediately <b>follows a loss</b>, compared to your baseline.
-    Bounce straight back → high Control. Spiral after a bad beat → that's tilt, and it shows.</div>
-    <p class="honest">Needs ~6 post-loss games to measure.</p>
+    <div class="how"><b>Quick stat</b>
+    Your rating, tilted by how you score in the game right after a loss (tilt resistance).</div>
+    <div class="how"><b>With Deep analysis</b>
+    Your <b>blunder + mistake rate</b> — the share of your moves where the engine says the position
+    dropped sharply. Fewer big eval swings = more control. This is the most direct read of consistency.</div>
+  </section>
+
+  <section id="deep">
+    <div class="stat-h"><h2>Deep analysis</h2><span class="tag">ENGINE</span></div>
+    <p class="measure">Real Stockfish, running in your browser.</p>
+    <p>When you press <b>Deep analysis</b>, a single-threaded build of Stockfish (the same engine that powers
+    top analysis sites) loads in your browser and replays your recent games move by move. For each of your
+    moves it compares the position before and after, and the difference — your <b>centipawn loss</b> — becomes
+    an <b>accuracy</b> score. Accuracy is naturally tied to strength: a world-class player loses ~10–15
+    centipawns a move, a beginner loses 60–80. That's why the engine version can't be gamed by style alone.</p>
+    <div class="how"><b>Honest limits</b>
+    It runs on your device, so it analyzes a handful of recent games at moderate depth — enough for a fair read,
+    not a tournament post-mortem. Nothing is uploaded; the analysis happens entirely in your browser. Speed and
+    Openings stay as their quick stats (they don't need an engine).</div>
+    <p class="honest">Stockfish is free software (GPL-3.0); it's bundled with this page, not phoning home.</p>
   </section>
 
   <section id="tiers">

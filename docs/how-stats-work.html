@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How the stats work — Chess Card</title>
+<style>
+  :root{
+    --paper:#FAFAF7; --ink:#101010; --muted:#6d6d66; --line:#E6E4DA;
+    --green:#00D364; --green-ink:#00A851; --pink:#FF2E88; --blue:#2E6BFF; --orange:#FF7A00;
+  }
+  *{box-sizing:border-box} html{scroll-behavior:smooth}
+  body{margin:0;background:var(--paper);color:var(--ink);
+    font:17px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  ::selection{background:var(--green);color:var(--ink)}
+  .wrap{max-width:760px;margin:0 auto;padding:0 24px}
+  nav{display:flex;justify-content:space-between;align-items:center;padding:26px 0}
+  .brand{font-weight:900;letter-spacing:.02em;font-size:18px}
+  .brand em{font-style:normal;color:var(--green-ink)}
+  nav a{color:var(--ink);text-decoration:none;font-weight:700;font-size:15px;
+    border-bottom:2px solid var(--green);padding-bottom:2px}
+  h1{font-size:clamp(40px,8vw,72px);line-height:.98;margin:22px 0 8px;font-weight:900;letter-spacing:-.02em}
+  .lede{color:var(--muted);font-size:19px;max-width:600px;margin:0 0 10px}
+  .toc{display:flex;flex-wrap:wrap;gap:8px;margin:26px 0 40px}
+  .toc a{text-decoration:none;font-weight:800;font-size:13px;letter-spacing:.04em;color:var(--ink);
+    border:2px solid var(--ink);border-radius:99px;padding:7px 14px;background:#fff;transition:.15s}
+  .toc a:hover{box-shadow:3px 3px 0 var(--green);transform:translate(-1px,-1px)}
+  section{border-top:2px solid var(--ink);padding:34px 0}
+  .stat-h{display:flex;align-items:baseline;gap:14px;margin:0 0 6px}
+  .stat-h h2{font-size:30px;font-weight:900;margin:0;letter-spacing:.02em}
+  .stat-h .pc{font-size:22px}
+  .tag{font-size:12px;font-weight:900;letter-spacing:.14em;color:#fff;background:var(--ink);
+    border-radius:99px;padding:4px 11px}
+  p{margin:12px 0}
+  .measure{font-weight:700}
+  .how{background:#fff;border:2px solid var(--ink);border-radius:14px;padding:16px 18px;margin:16px 0;
+    box-shadow:5px 5px 0 var(--line)}
+  .how b{display:block;font-size:12px;letter-spacing:.16em;color:var(--muted);margin-bottom:6px;font-weight:900}
+  code{background:#F1EFE6;padding:2px 6px;border-radius:6px;font-size:14px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0}
+  .chip{border:2px solid var(--ink);border-radius:12px;padding:12px 14px;font-size:14px;font-weight:700}
+  .chip b{display:block;font-weight:900;letter-spacing:.08em;margin-bottom:3px}
+  .honest{color:var(--muted);font-size:14.5px;border-left:3px solid var(--pink);padding-left:14px;margin:16px 0}
+  footer{border-top:2px solid var(--ink);margin-top:10px;padding:26px 0 60px;color:var(--muted);font-size:13.5px}
+  footer a{color:var(--ink)}
+  .back{display:inline-block;margin-top:8px;font-weight:800;color:var(--ink);text-decoration:none;
+    border-bottom:2px solid var(--green)}
+  @media(max-width:560px){.grid2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav>
+    <div class="brand">CHESS <em>·</em> CARD</div>
+    <a href="index.html">← make your card</a>
+  </nav>
+
+  <h1>How the stats work</h1>
+  <p class="lede">Every number on your card is computed from your real, recent rated games —
+  no vibes. Here's exactly what each one measures and how it's built.</p>
+
+  <div class="toc">
+    <a href="#overall">Overall</a>
+    <a href="#SPD">Speed</a>
+    <a href="#ATK">Attack</a>
+    <a href="#DEF">Defense</a>
+    <a href="#END">Endgame</a>
+    <a href="#OPN">Openings</a>
+    <a href="#CON">Control</a>
+    <a href="#tiers">Card tiers</a>
+  </div>
+
+  <section id="overall">
+    <div class="stat-h"><h2>Overall</h2><span class="tag">RATING</span></div>
+    <p>Your <b>Overall</b> starts from your rating <b>percentile</b> — not the raw number. Being 1500
+    means something different on Lichess than on Chess.com, so the card asks the same question on both:
+    <i>what fraction of players are you stronger than?</i> That percentile is mapped onto a 40–99 card scale.</p>
+    <div class="how"><b>The compression problem — and the fix</b>
+    Percentiles flatten at the very top: a 2500 and a 2900 both read as "roughly 99th percentile," which
+    is why a strong streamer and a world #1 used to tie at 96. So above the elite line the card switches to
+    <b>absolute rating</b> to spread the top back out — 2700 ≠ 2800 ≠ 2900. World #1s land 98–99; very strong
+    titled players sit a notch below.</p>
+    <p>A <b>title</b> (GM, IM, FM…) is permanent proof of strength that fast ratings understate, so titled
+    players get a rating floor: an equal-rated amateur will never out-card a titled player.</p>
+    <p class="honest">Honest caveat: Chess.com doesn't publish percentiles, so those curves are approximate.
+    Overall blends your rating percentile (heavily) with your six sub-stats (lightly).</p>
+  </section>
+
+  <section id="SPD">
+    <div class="stat-h"><span class="pc">♞</span><h2>Speed</h2><span class="tag">CLOCK</span></div>
+    <p class="measure">How well you handle the clock — flagging, time scrambles, and bullet strength.</p>
+    <div class="how"><b>How it's computed</b>
+    Anchored to your bullet-rating percentile, then adjusted by your <b>flag rate</b> — the share of your
+    losses that ended <code>out of time</code> rather than on the board. Rarely flag → Speed climbs. Lose on
+    time a lot → it drops.</div>
+    <p class="honest">Needs at least ~5 losses to measure flagging directly; otherwise it's set from your bullet rating.</p>
+  </section>
+
+  <section id="ATK">
+    <div class="stat-h"><span class="pc">♛</span><h2>Attack</h2><span class="tag">AGGRESSION</span></div>
+    <p class="measure">How decisively you win — checkmates and converting winning games.</p>
+    <div class="how"><b>How it's computed</b>
+    Built from your <b>checkmate rate</b> (share of wins that end in mate rather than resignation/flag) and your
+    overall <b>win rate</b>. Going for the kill and finishing games on the board pushes Attack up.</div>
+  </section>
+
+  <section id="DEF">
+    <div class="stat-h"><span class="pc">♜</span><h2>Defense</h2><span class="tag">RESILIENCE</span></div>
+    <p class="measure">How you hold up against clearly stronger opponents.</p>
+    <div class="how"><b>How it's computed</b>
+    Your score in games versus opponents rated <b>25+ points above you</b>. Holding or beating stronger players
+    lifts Defense; getting run over drops it.</div>
+    <p class="honest">Needs ~8 games vs higher-rated opponents to measure; otherwise it's estimated from your rating.</p>
+  </section>
+
+  <section id="END">
+    <div class="stat-h"><span class="pc">♚</span><h2>Endgame</h2><span class="tag">GRIND</span></div>
+    <p class="measure">How much better you play long games than short ones.</p>
+    <div class="how"><b>How it's computed</b>
+    Your score in <b>long games (70+ plies)</b> compared to your baseline score. If you do <i>better</i> the
+    longer a game runs, you've got a real endgame — and Endgame rewards exactly that.</div>
+    <p class="honest">Needs ~8 long games to measure directly.</p>
+  </section>
+
+  <section id="OPN">
+    <div class="stat-h"><span class="pc">♝</span><h2>Openings</h2><span class="tag">PREP</span></div>
+    <p class="measure">Repertoire breadth and how rarely you get blown out early.</p>
+    <div class="how"><b>How it's computed</b>
+    Two ingredients: how many <b>distinct openings (ECO codes)</b> you play, and how rarely you take a
+    <b>quick loss</b> (under 40 plies). Variety plus not getting steamrolled out of the opening = prepared.</div>
+    <p class="honest">This is a breadth proxy, not a theory-depth measure — a v2 goal is book depth vs a masters database.</p>
+  </section>
+
+  <section id="CON">
+    <div class="stat-h"><span class="pc">♟</span><h2>Control</h2><span class="tag">COMPOSURE</span></div>
+    <p class="measure">Composure — how you score in the game right after a loss.</p>
+    <div class="how"><b>How it's computed</b>
+    Your win/draw score in every game that immediately <b>follows a loss</b>, compared to your baseline.
+    Bounce straight back → high Control. Spiral after a bad beat → that's tilt, and it shows.</div>
+    <p class="honest">Needs ~6 post-loss games to measure.</p>
+  </section>
+
+  <section id="tiers">
+    <div class="stat-h"><h2>Card tiers</h2><span class="tag">RARITY</span></div>
+    <p>Like ultimate-team cards, your finish is set by strength and story:</p>
+    <div class="grid2">
+      <div class="chip"><b>BRONZE</b>Overall under 65.</div>
+      <div class="chip"><b>SILVER</b>Overall 65–74.</div>
+      <div class="chip"><b>GOLD</b>Overall 75–89.</div>
+      <div class="chip"><b>PRIME</b>Titled players, or Overall 90+. The premium black-and-gold card.</div>
+      <div class="chip"><b>ICON</b>Account dormant 1+ years — the retired-great treatment.</div>
+      <div class="chip"><b>LEGEND</b>Dormant 5+ years — holographic, the rarest pull.</div>
+    </div>
+    <p><b>Rare</b> is the holographic foil finish, layered on top of any tier. You earn it by sitting near the
+    top of your band, having a standout (spiky) stat spread, or being Prime/Icon/Legend.</p>
+  </section>
+
+  <footer>
+    Unofficial fan project — not affiliated with Lichess, Chess.com, or any football game.
+    Data from the <a href="https://lichess.org">Lichess</a> &amp; <a href="https://www.chess.com">Chess.com</a> public APIs.
+    <br><a class="back" href="index.html">← Back to your card</a>
+  </footer>
+</div>
+</body>
+</html>

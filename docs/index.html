@@ -62,14 +62,19 @@
   .walker{position:absolute;bottom:28px;left:-8vw;font-size:32px;color:rgba(16,16,16,.16);
     animation:walkx var(--wd,36s) linear infinite;animation-delay:var(--wdel,0s)}
   @keyframes walkx{to{transform:translateX(120vw)}}
-  .walker b{display:block;font-weight:400;transform-origin:50% 100%;animation:gait .85s ease-in-out infinite}
-  @keyframes gait{0%,100%{transform:translateY(0) rotate(-4.5deg)}
-    25%{transform:translateY(-7px) rotate(0) scaleY(1.05)}
-    50%{transform:translateY(0) rotate(4.5deg)}
-    75%{transform:translateY(-7px) rotate(0) scaleY(1.05)}}
+  .walker b{display:block;font-weight:400;transform-origin:50% 100%;animation:gait .78s ease-in-out infinite}
+  @keyframes gait{
+    0%  {transform:translateY(0)   rotate(-6deg) scaleY(1)}
+    15% {transform:translateY(-9px) rotate(-2deg) scaleY(1.07)}
+    30% {transform:translateY(0)   rotate(3deg)  scaleY(.95)}
+    50% {transform:translateY(0)   rotate(6deg)  scaleY(1)}
+    65% {transform:translateY(-9px) rotate(2deg)  scaleY(1.07)}
+    80% {transform:translateY(0)   rotate(-3deg) scaleY(.95)}
+    100%{transform:translateY(0)   rotate(-6deg) scaleY(1)}}
   .walker u{position:absolute;left:50%;bottom:-6px;width:24px;height:5px;margin-left:-12px;border-radius:50%;
-    background:rgba(16,16,16,.25);filter:blur(1.5px);text-decoration:none;animation:shad .85s ease-in-out infinite}
-  @keyframes shad{0%,50%,100%{transform:scaleX(1);opacity:.6}25%,75%{transform:scaleX(.7);opacity:.35}}
+    background:rgba(16,16,16,.25);filter:blur(1.5px);text-decoration:none;animation:shad .78s ease-in-out infinite}
+  @keyframes shad{0%,100%{transform:scaleX(1);opacity:.6}
+    15%,65%{transform:scaleX(.62);opacity:.28}40%,90%{transform:scaleX(1);opacity:.6}}
   .walker.kn{font-size:40px;color:rgba(16,16,16,.22)}
   .walker.kn b{animation:knightgait 3.6s ease-in-out infinite}
   @keyframes knightgait{0%,54%,100%{transform:translateY(0) rotate(-3deg)}
@@ -118,17 +123,47 @@
     position:absolute;inset:-20px;font-size:34px;line-height:1.9;letter-spacing:14px;color:#F1EFE6;
     z-index:-1;transform:rotate(-12deg)}
 
-  .tier-bronze{background:linear-gradient(165deg,#fff 30%,#FFE8D2);box-shadow:9px 9px 0 var(--orange)}
-  .tier-silver{background:linear-gradient(165deg,#fff 30%,#E8EEF6);box-shadow:9px 9px 0 #9FB2D0}
-  .tier-gold{background:linear-gradient(165deg,#fff 25%,#FFE895);box-shadow:9px 9px 0 #E8B64C}
-  .tier-legend{background:linear-gradient(150deg,#fff 12%,#FFE3F1 38%,#E1FFEE 62%,#DFF1FF 85%,#FFF6DC);
-    box-shadow:9px 9px 0 var(--pink)}
-  .tier-icon{background:linear-gradient(165deg,#FFFDF4 30%,#F3E3B4);box-shadow:9px 9px 0 #B8912E}
+  /* ---- FIFA-style tiers ---- */
+  .tier-bronze{background:linear-gradient(160deg,#FBEADC 8%,#EABF97 55%,#C67B45);box-shadow:9px 9px 0 #A85B2B;color:#3d2413}
+  .tier-silver{background:linear-gradient(160deg,#FBFCFE 8%,#D3DBE6 52%,#AEBAC9);box-shadow:9px 9px 0 #8494A8;color:#1c2530}
+  .tier-gold{background:linear-gradient(160deg,#FFF7D6 6%,#F5D874 48%,#E0AE33);box-shadow:9px 9px 0 #B6841E;color:#40300a}
+  .tier-prime{color:#F6E4B0;border-color:#E7C56A;box-shadow:9px 9px 0 #C8901A;
+    background:
+      radial-gradient(120% 55% at 50% -8%,rgba(231,197,106,.30),transparent 60%),
+      linear-gradient(158deg,#2b2b2f 0%,#151517 42%,#0b0b0c 100%)}
+  .tier-prime .ovr b,.tier-prime .cname,.tier-prime .st b{color:#F6E4B0}
+  .tier-prime .ovr span,.tier-prime .st span,.tier-prime .card-foot,.tier-prime .cname .t{color:#CBB27A}
+  .tier-prime .plat{border-color:#E7C56A;color:#F6E4B0}
+  .tier-prime .divider{background:#E7C56A;opacity:.75}
+  .tier-prime .st i{background:rgba(255,255,255,.16)}
+  .tier-prime .st i u{background:linear-gradient(90deg,#F6E4B0,#C8901A)}
+  .tier-prime .art .halo{background:radial-gradient(circle,rgba(231,197,106,.30),transparent 65%)}
+  .cardback.tier-prime{color:#F6E4B0}
+  .cardback.tier-prime::before{color:rgba(231,197,106,.10)}
+  .tier-icon{background:linear-gradient(160deg,#FFFBEC 6%,#EAD59A 50%,#BF9C4E);box-shadow:9px 9px 0 #8A6A1C;color:#3a2f12}
+  .tier-legend{background:linear-gradient(150deg,#FFE3F1 8%,#E7D6FF 30%,#D6F1FF 52%,#DFFCEB 74%,#FFF6DC 96%);
+    background-size:180% 180%;box-shadow:9px 9px 0 var(--pink);color:#241a2b;animation:holoShift 7s ease-in-out infinite}
+  @keyframes holoShift{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
   .tierchip{position:absolute;top:18px;right:-34px;transform:rotate(45deg);font-size:10px;
-    font-weight:900;letter-spacing:.24em;padding:5px 40px;color:#fff;background:var(--ink)}
+    font-weight:900;letter-spacing:.2em;padding:5px 40px;color:#fff;background:var(--ink);z-index:3}
   .tier-legend .tierchip{background:var(--pink)}
-  .tier-gold .tierchip{background:#C8901A}
+  .tier-gold .tierchip{background:#B6841E}
   .tier-icon .tierchip{background:#8A6A1C}
+  .tier-prime .tierchip{background:linear-gradient(90deg,#E7C56A,#C8901A);color:#151517}
+  .tier-bronze .tierchip{background:#A85B2B}
+  .tier-silver .tierchip{background:#6d7d90}
+
+  /* rare = holographic foil sweep */
+  .rare .rarefoil{position:absolute;inset:0;pointer-events:none;z-index:2;mix-blend-mode:overlay;opacity:.55;
+    background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.9) 44%,rgba(180,220,255,.7) 50%,
+      rgba(255,180,240,.7) 56%,transparent 70%);background-size:260% 260%;animation:foilSweep 4.5s linear infinite}
+  @keyframes foilSweep{0%{background-position:120% 0}100%{background-position:-120% 0}}
+  .tier-prime.rare .rarefoil{mix-blend-mode:screen;opacity:.7}
+
+  /* titled-player crown badge */
+  .crown{position:absolute;top:14px;left:50%;transform:translateX(-50%);font-size:20px;z-index:3;
+    color:#E7C56A;text-shadow:0 1px 0 rgba(0,0,0,.4);display:none}
+  .titled .crown{display:block}
 
   .card-top{display:flex;justify-content:space-between;align-items:flex-start}
   .ovr b{font-size:66px;font-weight:900;line-height:1;letter-spacing:-.03em}
@@ -193,6 +228,34 @@
   .wo-skip{position:absolute;bottom:-38px;left:0;right:0;text-align:center;font-size:11px;
     letter-spacing:.3em;color:#b9b7ac;font-weight:800}
 
+  /* clickable stats + explainer modal */
+  #sgrid .st{cursor:pointer;border-radius:8px;padding:2px 5px;margin:-2px -5px;
+    transition:background .15s,transform .08s}
+  #sgrid .st:hover{background:rgba(16,16,16,.07)}
+  #sgrid .st:active{transform:scale(.97)}
+  #sgrid .st:focus-visible{outline:2px solid var(--blue);outline-offset:1px}
+  .tier-prime #sgrid .st:hover{background:rgba(255,255,255,.10)}
+  #statModal{position:fixed;inset:0;z-index:90;display:none;align-items:center;justify-content:center;
+    padding:20px;background:rgba(16,16,16,.55)}
+  #statModal.show{display:flex}
+  .sm-card{background:var(--paper);border:2.5px solid var(--ink);border-radius:20px;max-width:440px;width:100%;
+    padding:26px;box-shadow:10px 10px 0 var(--ink);position:relative;animation:smPop .24s ease}
+  @keyframes smPop{from{transform:translateY(14px) scale(.96);opacity:0}to{transform:none;opacity:1}}
+  .sm-close{position:absolute;top:12px;right:16px;border:0;background:none;font-size:26px;line-height:1;
+    cursor:pointer;color:var(--muted);font-weight:900}
+  .sm-key{display:flex;align-items:baseline;gap:14px}
+  .sm-key b{font-size:46px;font-weight:900;line-height:1;letter-spacing:-.02em}
+  .sm-key .nm{font-size:15px;font-weight:900;letter-spacing:.16em}
+  .sm-key .nm small{display:block;color:var(--muted);letter-spacing:.03em;font-weight:700;
+    font-size:12.5px;line-height:1.4;margin-top:4px;text-transform:none}
+  .sm-bar{height:10px;border-radius:6px;background:rgba(16,16,16,.10);overflow:hidden;margin:16px 0 18px}
+  .sm-bar u{display:block;height:100%;width:0;border-radius:6px;
+    background:linear-gradient(90deg,var(--green),var(--green-ink))}
+  .sm-h{font-size:11px;letter-spacing:.16em;font-weight:900;color:var(--muted);margin:0 0 5px}
+  .sm-txt{font-size:15.5px;line-height:1.55;margin:0}
+  .sm-foot{margin-top:20px;font-size:13.5px}
+  .sm-foot a{color:var(--ink);font-weight:800}
+
   @media (prefers-reduced-motion: reduce){
     *,*::before,*::after{animation-duration:.001s !important;transition-duration:.001s !important}
     .parade,.scatter{display:none}
@@ -206,8 +269,8 @@
 <div id="shake">
 <div class="wrap">
   <nav>
-    <div class="brand">TALE <em>of the</em> TAPE</div>
-    <a href="tale-of-the-tape.html">compare the pros →</a>
+    <div class="brand">CHESS <em>·</em> CARD</div>
+    <a href="how-stats-work.html">how stats work →</a>
   </nav>
 
   <section class="hero">
@@ -232,12 +295,14 @@
     <div class="hint">Try any public account — yours, or a streamer's.</div>
     <div class="parade" aria-hidden="true">
       <div class="ground"></div>
-      <div class="walker" style="--wd:36s;--wdel:-3s"><b>♟</b><u></u></div>
-      <div class="walker" style="--wd:36s;--wdel:-10.2s;font-size:28px"><b>♟</b><u></u></div>
-      <div class="walker" style="--wd:36s;--wdel:-16.8s"><b>♟</b><u></u></div>
-      <div class="walker" style="--wd:36s;--wdel:-23.4s;font-size:30px"><b>♟</b><u></u></div>
-      <div class="walker" style="--wd:36s;--wdel:-30s;font-size:27px"><b>♟</b><u></u></div>
-      <div class="walker kn" style="--wd:24s;--wdel:-6s"><b>♞</b><u></u></div>
+      <div class="walker" style="--wd:34s;--wdel:-2s;font-size:33px"><b>♟</b><u></u></div>
+      <div class="walker" style="--wd:39s;--wdel:-9s;font-size:27px"><b>♟</b><u></u></div>
+      <div class="walker" style="--wd:31s;--wdel:-15s;font-size:36px"><b>♟</b><u></u></div>
+      <div class="walker" style="--wd:37s;--wdel:-21s;font-size:29px"><b>♝</b><u></u></div>
+      <div class="walker" style="--wd:33s;--wdel:-27s;font-size:31px"><b>♟</b><u></u></div>
+      <div class="walker" style="--wd:41s;--wdel:-33s;font-size:26px"><b>♟</b><u></u></div>
+      <div class="walker kn" style="--wd:23s;--wdel:-6s"><b>♞</b><u></u></div>
+      <div class="walker kn" style="--wd:27s;--wdel:-18s;font-size:34px"><b>♞</b><u></u></div>
     </div>
   </section>
 
@@ -246,7 +311,7 @@
     <div class="pack" id="pack">
       <div class="emblem">♞</div>
       <div class="pk-label">PLAYER PACK</div>
-      <div class="pk-sub">TALE OF THE TAPE</div>
+      <div class="pk-sub">RATED LIVE</div>
       <div class="tap">CLICK TO RIP</div>
     </div>
     <div class="walkout" id="walkout">
@@ -261,6 +326,7 @@
       <div id="spin">
         <div id="card">
           <div class="tierchip" id="tierchip">GOLD</div>
+          <div class="crown">♛</div>
           <div class="card-top">
             <div class="ovr"><b id="ovrNum">00</b><span id="arch">—</span></div>
             <div class="plat" id="platBadge">LICHESS</div>
@@ -269,8 +335,9 @@
           <div class="cname" id="cname"></div>
           <div class="divider"></div>
           <div class="sgrid" id="sgrid"></div>
-          <div class="card-foot"><span id="cfoot-left"></span><span>TALE OF THE TAPE</span></div>
+          <div class="card-foot"><span id="cfoot-left"></span><span class="cardbrand">CHESS CARD</span></div>
           <div class="foil"></div>
+          <div class="rarefoil"></div>
         </div>
         <div class="cardback tier-gold" id="cardback">
           <div class="bigpc">♞</div><div class="bk">PLAYER PACK</div>
@@ -278,25 +345,40 @@
       </div>
       <div class="ripple" id="ripple"></div>
     </div>
-    <div class="spin-hint" id="spinhint">GRAB THE CARD · THROW IT · IT SPINS</div>
+    <div class="spin-hint" id="spinhint">GRAB &amp; THROW TO SPIN · TAP A STAT TO SEE WHY</div>
     <div class="actions" id="actions">
       <button id="dl" class="primary">Download PNG</button>
       <button id="again">New card</button>
-      <a href="tale-of-the-tape.html">Compare the pros →</a>
+      <a href="how-stats-work.html">How stats work →</a>
     </div>
-    <p class="finenote">Overall is calibrated to real rating percentiles (Chess.com percentiles are
-    approximate). Sub-stats come from your recent rated games. Dormant 3+ years? You get an ICON card.
+    <p class="finenote">Tap any stat to see why it's that number. Overall is calibrated to real rating
+    percentiles (Chess.com percentiles are approximate); the very top is spread by absolute rating so
+    world #1s outrank streamers. Titled players get a PRIME card. Dormant 1yr+ → ICON, 5yr+ → LEGEND.
     Unofficial fan project — not affiliated with Lichess, Chess.com, or any football game.</p>
   </section>
 
   <footer class="wrap">
-    Data: <a href="https://lichess.org/broadcast">Lichess</a> & <a href="https://www.chess.com">Chess.com</a> public APIs
-    · built as a portfolio piece · <a href="tale-of-the-tape.html">pro scouting report</a>
+    Data: <a href="https://lichess.org">Lichess</a> & <a href="https://www.chess.com">Chess.com</a> public APIs
+    · built as a portfolio piece · <a href="how-stats-work.html">how the stats work</a>
   </footer>
 </div>
 </div>
 <div id="flash"></div>
 <canvas id="burst"></canvas>
+
+<div id="statModal" aria-modal="true" role="dialog">
+  <div class="sm-card">
+    <button class="sm-close" id="smClose" aria-label="Close">×</button>
+    <div class="sm-key">
+      <b id="smVal">0</b>
+      <div class="nm"><span id="smName">SPEED</span><small id="smMeasure"></small></div>
+    </div>
+    <div class="sm-bar"><u id="smBar"></u></div>
+    <div class="sm-h">YOUR READ</div>
+    <p class="sm-txt" id="smWhy"></p>
+    <div class="sm-foot"><a href="how-stats-work.html" id="smMore">Full methodology for all six stats →</a></div>
+  </div>
+</div>
 <a class="feedback" href="mailto:arshiyaanand.works@gmail.com?subject=Chess%20Card%20%E2%80%94%20my%20review&body=Rating%20(1%E2%80%9310)%3A%20%0AWhat%20slapped%3A%20%0AWhat%20sucked%3A%20%0AWould%20you%20share%20your%20card%3F%20(y%2Fn)%3A%20">★ RATE THIS</a>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -359,19 +441,46 @@ function normChesscom(g, uname){
   };
 }
 
-/* Behavior stats from normalized recent games */
+/* Elite rating anchors. Percentiles saturate at the top — a 2500 and a 2900
+   both read as "~99th percentile," which is exactly why a streamer and a world
+   #1 used to tie at 96. These break that ceiling using ABSOLUTE rating so the
+   very top actually spreads out. Platform-specific: chess.com blitz runs hotter
+   than Lichess blitz. Hand-tuned, approximate. */
+const ELITE = {
+  lichess:  [[2300,93],[2450,95],[2550,96],[2650,97],[2750,98],[2850,99],[3000,99]],
+  chesscom: [[2450,93],[2600,95],[2700,96],[2800,97],[2900,98],[3050,99],[3200,99]],
+};
+// A title is permanent proof of strength that speed ratings understate, so a
+// titled player never falls below this floor — a titled streamer out-cards an
+// equal-rated amateur, by design.
+const TITLE_FLOOR = {GM:92, IM:88, FM:85, CM:83, NM:84, WGM:90, WIM:86, WFM:83, WCM:81, LM:82};
+function eliteFromRating(platform, r){
+  if (r == null) return 0;
+  const a = ELITE[platform]; if (!a) return 0;
+  if (r <= a[0][0]) return 0;                       // below the elite floor: no boost
+  for (let i = 1; i < a.length; i++){
+    const [r1, p1] = a[i - 1], [r2, p2] = a[i];
+    if (r <= r2) return p1 + (p2 - p1) * (r - r1) / (r2 - r1);
+  }
+  return 99;
+}
+
+/* Behavior stats from normalized recent games. Returns scaled 0-99 stats plus
+   the raw drivers, so the card can explain WHY each stat is what it is. */
 function behavior(gs){
   const n = gs.length;
-  if (n < 10) return {ATK:null, DEF:null, END:null, OPN:null, CON:null, flagRate:null, n};
+  if (n < 10) return {ATK:null, DEF:null, END:null, OPN:null, CON:null, flagRate:null, n, raw:{}};
   const score = a => a.length ? a.reduce((s, g) => s + g.res, 0) / a.length : null;
   const overall = score(gs);
   const wins = gs.filter(g => g.res === 1), losses = gs.filter(g => g.res === 0);
+  const winRate = wins.length / n;
   const mateRate = wins.length ? wins.filter(g => g.mateWin).length / wins.length : 0;
   const vsHigher = gs.filter(g => g.oppDiff >= 25);
   const defScore = vsHigher.length >= 8 ? score(vsHigher) : null;
   const long = gs.filter(g => g.plies >= 70);
   const endScore = long.length >= 8 ? score(long) : null;
-  const variety = new Set(gs.map(g => g.eco)).size / n;
+  const distinctEco = new Set(gs.map(g => g.eco)).size;
+  const variety = distinctEco / n;
   const earlyLossRate = losses.length ? losses.filter(g => g.plies < 40).length / n : 0;
   // tilt resistance: score in the game right after a loss
   const after = [];
@@ -379,12 +488,44 @@ function behavior(gs){
   const tilt = after.length >= 6 ? score(after) - overall : null;
   const flagRate = losses.length >= 5 ? losses.filter(g => g.flagLoss).length / losses.length : null;
   return {
-    ATK: scale(mateRate * 0.75 + (wins.length / n) * 0.55, 0.18, 0.62),
+    ATK: scale(mateRate * 0.75 + winRate * 0.55, 0.18, 0.62),
     DEF: defScore == null ? null : scale(defScore, 0.18, 0.62),
     END: endScore == null ? null : scale(endScore - overall, -0.16, 0.16),
     OPN: scale(variety * 0.7 + (1 - earlyLossRate) * 0.45, 0.45, 0.95),
     CON: tilt == null ? null : scale(tilt, -0.14, 0.12),
     flagRate, n,
+    raw:{overall, winRate, mateRate, defScore, vsHigherN:vsHigher.length, endScore,
+         longN:long.length, distinctEco, earlyLossRate, tilt, afterN:after.length,
+         flagRate, winsN:wins.length, lossesN:losses.length},
+  };
+}
+
+/* Plain-English "why is my stat this number" for the per-stat panel. */
+function statReasons(b){
+  const r = b.raw || {}, pc = x => Math.round(x * 100);
+  if (!b.n || b.n < 10){
+    const t = "Estimated from your rating — under 10 recent rated games, so behavior stats aren't computed yet. Play more rated games for a real read.";
+    return {SPD:t, ATK:t, DEF:t, END:t, OPN:t, CON:t};
+  }
+  return {
+    SPD: b.flagRate != null
+      ? `You lose on time in ${pc(b.flagRate)}% of your losses. ` +
+        (b.flagRate < 0.15 ? "Rock-solid clock — that's what lifts this."
+         : b.flagRate > 0.30 ? "The clock is costing you; that's what caps it."
+         : "Middle of the pack on the clock.")
+      : "Set from your bullet rating — not enough flagged losses to measure directly.",
+    ATK: `How decisively you win: ${pc(r.mateRate || 0)}% of your wins end in checkmate, and you win ${pc(r.winRate || 0)}% of games overall. Higher = you go for the kill instead of grinding.`,
+    DEF: r.defScore != null
+      ? `Your score vs clearly higher-rated opponents (${r.vsHigherN} such games): ${pc(r.defScore)}%. Holding stronger players lifts this; getting run over drops it.`
+      : "Not enough games vs higher-rated opponents to measure — set from your rating.",
+    END: r.endScore != null
+      ? `In long games (70+ plies, ${r.longN} of them) you score ${pc(r.endScore)}% vs ${pc(r.overall)}% overall. Doing better the longer the game runs = a real endgame.`
+      : "Not enough long games to measure your endgame directly.",
+    OPN: `${r.distinctEco} distinct openings across ${b.n} games, and only ${pc(r.earlyLossRate)}% were quick losses. Variety plus not getting blown out early = prepared.`,
+    CON: r.tilt != null
+      ? `Right after a loss you score ${pc((r.overall || 0) + r.tilt)}% vs a ${pc(r.overall)}% baseline. ` +
+        (r.tilt >= 0 ? "You don't tilt — you bounce straight back." : "You dip after losses; that's tilt.")
+      : "Not enough back-to-back games after a loss to measure tilt.",
   };
 }
 
@@ -423,18 +564,49 @@ function buildCard(o){
     for (const k in stats) stats[k] = clamp(Math.max(stats[k], floor), 40, 99);
   }
   const avg = Object.values(stats).reduce((a, x) => a + x, 0) / 6;
-  const ovr = lowData ? baseCard : clamp(Math.round(0.78 * baseCard + 0.22 * avg), 40, 99);
+  let ovr = lowData ? baseCard : clamp(Math.round(0.78 * baseCard + 0.22 * avg), 40, 99);
+
+  // --- decompress the elite + reward titles (the "make ratings dynamic" fix) ---
+  const eliteBoost = Math.round(eliteFromRating(o.platform, Math.max(o.ratings.blitz || 0, o.ratings.rapid || 0)));
+  const titleFloor = o.title ? (TITLE_FLOOR[o.title] || 0) : 0;
+  const bestRating = Math.max(o.ratings.blitz || 0, o.ratings.rapid || 0, o.ratings.bullet || 0);
+  ovr = clamp(Math.max(ovr, eliteBoost, titleFloor), 40, 99);
+
   const ARCH = {SPD:["SPEED DEMON","♞"], ATK:["TACTICIAN","♛"], DEF:["THE WALL","♜"],
                 END:["GRINDER","♚"], OPN:["THEORY NERD","♝"], CON:["UNTILTABLE","♟"]};
   const topKey = Object.keys(stats).sort((a, c) => stats[c] - stats[a])[0];
-  // dormant 3+ years → ICON card (retired-legend treatment), any rating
-  const icon = o.lastSeen != null && Date.now() - o.lastSeen > 3 * 365.25 * 864e5;
-  const tier = icon ? "icon"
-    : ovr >= 94 ? "legend" : ovr >= 78 ? "gold" : ovr >= 62 ? "silver" : "bronze";
-  return {ovr, stats, tier, icon,
-          arch: icon ? "ICON" : lowData ? "MYSTERY CARD" : ARCH[topKey][0],
-          piece: icon ? "♔" : lowData ? "♟" : ARCH[topKey][1], lowData,
-          sample: b.n, pct: Math.round(best * 10) / 10};
+
+  // --- FIFA-style tiering ---
+  //  dormancy = the "retired great" cards:  1yr+ → ICON, 5yr+ → LEGEND
+  //  active:   titled OR 90+ → PRIME (premium),  else GOLD / SILVER / BRONZE by OVR
+  const yrs = o.lastSeen != null ? (Date.now() - o.lastSeen) / (365.25 * 864e5) : 0;
+  const titled = !!o.title;
+  let tier, tierName;
+  if (yrs >= 5){ tier = "legend"; tierName = "LEGEND"; }
+  else if (yrs >= 1){ tier = "icon"; tierName = "ICON"; }
+  else if (titled || ovr >= 90){ tier = "prime"; tierName = titled ? o.title : "PRIME"; }
+  else if (ovr >= 75){ tier = "gold"; tierName = "GOLD"; }
+  else if (ovr >= 65){ tier = "silver"; tierName = "SILVER"; }
+  else { tier = "bronze"; tierName = "BRONZE"; }
+
+  // rarity = the shiny finish. Always rare for prime/icon/legend; otherwise the
+  // top of each band, or a spiky (standout) stat spread, earns the foil.
+  const bandFloor = tier === "gold" ? 75 : tier === "silver" ? 65 : 40;
+  const bandTop = tier === "gold" ? 90 : tier === "silver" ? 75 : 65;
+  const spread = Math.max(...Object.values(stats)) - Math.min(...Object.values(stats));
+  const rare = ["prime", "icon", "legend"].includes(tier)
+    || (ovr - bandFloor) / (bandTop - bandFloor) >= 0.8
+    || (!lowData && spread >= 24);
+
+  const dormant = tier === "icon" || tier === "legend";
+  return {
+    ovr, stats, tier, tierName, rare, titled, dormant,
+    arch: dormant ? tierName : lowData ? "MYSTERY CARD" : ARCH[topKey][0],
+    piece: dormant ? "♔" : lowData ? "♟" : ARCH[topKey][1],
+    lowData, sample: b.n, pct: Math.round(best * 10) / 10, topKey,
+    percentiles: pcts, ratings: o.ratings, bestRating, platform: o.platform,
+    reasons: statReasons(b),
+  };
 }
 /* ============================= ENGINE-END ============================= */
 
@@ -504,30 +676,38 @@ gsap.timeline({defaults:{ease:"power4.out"}})
   .to(".gen", {opacity:1, duration:.7}, "-=.45")
   .to(".hint", {opacity:1, duration:.7}, "-=.5");
 
-/* scatter pieces that flee the cursor */
+/* scatter pieces that flee (and spin away from) the cursor */
 const SCAT = [];
 {
-  const host = $("scatter"), PIECES = "♞♟♛♜♝♚♘♙♕♖♗♔";
-  for (let i = 0; i < 12; i++){
+  const host = $("scatter"), PIECES = "♞♟♛♜♝♚♘♙♕♖♗♔♞♟♜♝♛♚";
+  for (let i = 0; i < 18; i++){
     const b = document.createElement("b");
-    b.textContent = PIECES[i];
-    if (i % 4 === 0) b.className = "tint";
-    const x = 8 + Math.random() * 84, y = 4 + Math.random() * 88;
-    b.style.cssText = `left:${x}%;top:${y}%;font-size:${26 + Math.random() * 46}px;` +
-      `transform:rotate(${(Math.random() * 24 - 12).toFixed(1)}deg)`;
+    b.textContent = PIECES[i % PIECES.length];
+    if (i % 3 === 0) b.className = "tint";
+    const x = 5 + Math.random() * 90, y = 3 + Math.random() * 90;
+    const rot = (Math.random() * 26 - 13).toFixed(1);
+    b.style.cssText = `left:${x}%;top:${y}%;font-size:${24 + Math.random() * 50}px;`;
+    b.dataset.rot = rot;
+    gsap.set(b, {rotation:+rot});
     host.appendChild(b);
-    SCAT.push({el:b, qx:gsap.quickTo(b, "x", {duration:.9, ease:"power3.out"}),
-               qy:gsap.quickTo(b, "y", {duration:.9, ease:"power3.out"})});
+    SCAT.push({el:b, baseRot:+rot,
+      qx:gsap.quickTo(b, "x", {duration:.8, ease:"power3.out"}),
+      qy:gsap.quickTo(b, "y", {duration:.8, ease:"power3.out"}),
+      qr:gsap.quickTo(b, "rotation", {duration:1.1, ease:"power2.out"})});
   }
 }
 document.addEventListener("pointermove", e => {
+  const R = 165;
   for (const p of SCAT){
     const r = p.el.getBoundingClientRect();
     const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
     const dx = cx - e.clientX, dy = cy - e.clientY;
-    const d = Math.hypot(dx, dy);
-    if (d < 130){ const f = (130 - d) / 130 * 70; p.qx(dx / d * f); p.qy(dy / d * f); }
-    else { p.qx(0); p.qy(0); }
+    const d = Math.hypot(dx, dy) || 1;
+    if (d < R){
+      const f = (R - d) / R * 100;                 // stronger shove, closer = harder
+      p.qx(dx / d * f); p.qy(dy / d * f);
+      p.qr(p.baseRot + (dx > 0 ? 1 : -1) * (R - d) / R * 45);   // spin away
+    } else { p.qx(0); p.qy(0); p.qr(p.baseRot); }
   }
 });
 
@@ -607,13 +787,16 @@ function showPack(data, card){
     pack.onclick = null;
     gsap.killTweensOf(pack);
     gsap.timeline()
-      .to(pack, {scaleY:.94, scaleX:1.03, duration:.14, ease:"power2.in"})
-      .to(pack, {x:"+=7", duration:.05, repeat:9, yoyo:true, ease:"none"})
-      .to(pack, {x:"+=12", duration:.04, repeat:7, yoyo:true, ease:"none"})
-      .to(pack, {scale:1.14, duration:.16, ease:"power3.in"})
-      .to("#flash", {opacity:1, duration:.07}, "<90%")
-      .add(() => { pack.style.display = "none"; burst(card.tier, {count:60}); shakeScreen(); walkout(data, card); })
-      .to("#flash", {opacity:0, duration:.5});
+      .to(pack, {y:-16, rotate:-5, scale:1.05, duration:.32, ease:"power2.out"})        // wind up
+      .to(pack, {rotate:4, duration:.28, ease:"sine.inOut", yoyo:true, repeat:1})       // sway / anticipation
+      .to(pack, {y:0, rotate:0, scaleY:.9, scaleX:1.07, duration:.15, ease:"power2.in"}) // load the spring
+      .to(pack, {x:"+=6", duration:.045, repeat:11, yoyo:true, ease:"none"})            // rumble
+      .to(pack, {x:"+=13", duration:.035, repeat:9, yoyo:true, ease:"none"})            // harder rumble
+      .add(() => burst(card.tier, {count:26}))                                          // early puff
+      .to(pack, {scale:1.24, duration:.18, ease:"power3.in"})                           // burst open
+      .to("#flash", {opacity:1, duration:.06}, "<70%")
+      .add(() => { pack.style.display = "none"; burst(card.tier, {count:72}); shakeScreen(); walkout(data, card); })
+      .to("#flash", {opacity:0, duration:.55});
   };
 }
 
@@ -629,7 +812,7 @@ function walkout(data, card){
   if (flagEmoji) beats.push({label:"FEDERATION", text:flagEmoji, big:true});
   beats.push(data.title ? {label:"TITLE", text:data.title, gold:true}
                         : {label:"ARCHETYPE", text:card.arch});
-  const isWalkout = !!data.title || card.tier === "legend" || card.tier === "icon";
+  const isWalkout = !!data.title || ["legend", "icon", "prime"].includes(card.tier);
 
   wo.style.display = "flex";
   sil.textContent = card.piece;
@@ -675,16 +858,17 @@ function shakeScreen(){
 }
 
 /* -------- card reveal -------- */
-let idleTween = null, spinY = 0, spinX = 0;
+let idleTween = null, spinY = 0, spinX = 0, CURRENT = null;
 function reveal(data, card){
   const spin = $("spin"), c = $("card");
   spinY = 0; spinX = 0;
   if (idleTween) idleTween.kill();
   gsap.set(spin, {display:"block", rotationY:0, rotationX:0, y:0});
-  c.className = "";
-  c.classList.add("tier-" + card.tier);
-  $("cardback").className = "cardback tier-" + card.tier;
-  $("tierchip").textContent = card.tier.toUpperCase();
+  CURRENT = {data, card};
+  const tierClasses = "tier-" + card.tier + (card.rare ? " rare" : "") + (card.titled ? " titled" : "");
+  c.className = tierClasses;
+  $("cardback").className = "cardback " + tierClasses;
+  $("tierchip").textContent = card.tierName;
   $("ovrNum").textContent = "0";
   $("arch").textContent = card.arch;
   $("platBadge").textContent = data.platform === "lichess" ? "LICHESS" : "CHESS.COM";
@@ -695,9 +879,10 @@ function reveal(data, card){
     ? String.fromCodePoint(...[...data.flag.toUpperCase()].map(ch => 0x1F1A5 + ch.charCodeAt(0))) + " " : "";
   $("cfoot-left").textContent = `${flag}${(data.totalGames || 0).toLocaleString()} games · top ${Math.max(0.1, Math.round((100 - card.pct) * 10) / 10)}%` +
     (card.lowData ? " · LOW DATA" : ` · last ${card.sample}`) +
-    (card.icon ? ` · last seen ${new Date(data.lastSeen).getFullYear()}` : "");
+    (card.dormant ? ` · last seen ${new Date(data.lastSeen).getFullYear()}` : "");
   $("sgrid").innerHTML = Object.entries(card.stats).map(([k, v]) =>
-    `<div class="st"><b data-v="${v}">0</b><span>${k}</span><i><u></u></i></div>`).join("");
+    `<div class="st" data-stat="${k}" role="button" tabindex="0" title="Why is my ${k} ${v}?">` +
+    `<b data-v="${v}">0</b><span>${k}</span><i><u></u></i></div>`).join("");
 
   const tl = gsap.timeline();
   tl.fromTo(spin, {y:"90vh", rotationY:45, scale:.4, opacity:0},
@@ -727,17 +912,23 @@ function startIdle(){
 /* -------- grabbable spin physics -------- */
 {
   const spin = $("spin");
-  let dragging = false, lx = 0, ly = 0, vx = 0, momentum = null;
+  // armed = pointer is down; dragging only begins after real movement, so a
+  // simple tap passes through to the stat click (opens the explainer).
+  let armed = false, dragging = false, sx = 0, sy = 0, lx = 0, ly = 0, vx = 0, momentum = null, pid = null;
   const render = () => gsap.set(spin, {rotationY:spinY, rotationX:spinX});
   spin.addEventListener("pointerdown", e => {
-    dragging = true; lx = e.clientX; ly = e.clientY; vx = 0;
-    spin.classList.add("grabbing");
-    spin.setPointerCapture(e.pointerId);
+    armed = true; dragging = false; sx = lx = e.clientX; sy = ly = e.clientY; vx = 0; pid = e.pointerId;
     if (momentum) momentum.kill();
-    if (idleTween) idleTween.pause();
   });
   spin.addEventListener("pointermove", e => {
-    if (!dragging) return;
+    if (!armed) return;
+    if (!dragging){
+      if (Math.hypot(e.clientX - sx, e.clientY - sy) < 5) return;   // still a tap
+      dragging = true;
+      spin.classList.add("grabbing");
+      try { spin.setPointerCapture(pid); } catch (_) {}
+      if (idleTween) idleTween.pause();
+    }
     const dx = e.clientX - lx, dy = e.clientY - ly;
     lx = e.clientX; ly = e.clientY;
     spinY += dx * .55; vx = dx * .55;
@@ -745,6 +936,7 @@ function startIdle(){
     render();
   });
   const release = () => {
+    armed = false;
     if (!dragging) return;
     dragging = false;
     spin.classList.remove("grabbing");
@@ -782,6 +974,7 @@ function burst(tier, opts = {}){
   cv.width = innerWidth; cv.height = innerHeight;
   const colors = tier === "legend" ? ["#FF2E88","#00D364","#2E6BFF","#FF7A00","#101010"]
     : tier === "icon" ? ["#C8901A","#8A6A1C","#FFE895","#101010"]
+    : tier === "prime" ? ["#E7C56A","#C8901A","#F6E4B0","#101010"]
     : ["#00D364","#FF2E88","#2E6BFF","#101010"];
   const ps = Array.from({length: opts.count ?? 170}, () => {
     const a = Math.random() * Math.PI * 2, v = 5 + Math.random() * 13;
@@ -822,6 +1015,42 @@ $("dl").onclick = async () => {
   a.href = canvas.toDataURL("image/png");
   a.click();
 };
+
+/* -------- per-stat explainer -------- */
+const STAT_META = {
+  SPD:["SPEED","Clock handling — flagging, time scrambles, bullet strength."],
+  ATK:["ATTACK","How decisively you win — checkmates and converting winning games."],
+  DEF:["DEFENSE","How you hold up against clearly stronger opponents."],
+  END:["ENDGAME","How much better you play long games than short ones."],
+  OPN:["OPENINGS","Repertoire breadth and how rarely you get blown out early."],
+  CON:["CONTROL","Composure — how you score in the game right after a loss."],
+};
+function openStat(k){
+  if (!CURRENT || !STAT_META[k]) return;
+  const {card} = CURRENT, v = card.stats[k];
+  $("smName").textContent = STAT_META[k][0];
+  $("smMeasure").textContent = STAT_META[k][1];
+  $("smWhy").textContent = card.reasons[k] || "";
+  $("smMore").href = "how-stats-work.html#" + k;
+  $("smVal").textContent = "0"; $("smBar").style.width = "0%";
+  $("statModal").classList.add("show");
+  const o = {v:0};
+  gsap.to(o, {v, duration:.5, ease:"power2.out", onUpdate:() => $("smVal").textContent = Math.round(o.v)});
+  gsap.to($("smBar"), {width:(v / 99 * 100) + "%", duration:.55, ease:"power3.out"});
+}
+function closeStat(){ $("statModal").classList.remove("show"); }
+document.addEventListener("click", e => {
+  const st = e.target.closest("#sgrid .st");
+  if (st) openStat(st.dataset.stat);
+});
+$("sgrid").addEventListener("keydown", e => {
+  if ((e.key === "Enter" || e.key === " ") && e.target.dataset && e.target.dataset.stat){
+    e.preventDefault(); openStat(e.target.dataset.stat);
+  }
+});
+$("smClose").onclick = closeStat;
+$("statModal").addEventListener("click", e => { if (e.target.id === "statModal") closeStat(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeStat(); });
 
 /* expose engine for tests */
 if (typeof module !== "undefined") module.exports = {cdfPct, pctToCard, normLichess, normChesscom, behavior, buildCard};

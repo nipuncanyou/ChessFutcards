@@ -212,6 +212,10 @@
     color:var(--csub);margin-top:7px;writing-mode:vertical-rl;text-orientation:mixed}
   .c-art{flex:1;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden}
   .c-art span{font-size:150px;line-height:1;filter:drop-shadow(0 12px 14px rgba(0,0,0,.28));z-index:1}
+  .c-art img{display:none;width:158px;height:158px;object-fit:cover;border-radius:24%;
+    border:3px solid var(--csub);box-shadow:0 12px 22px rgba(0,0,0,.32);z-index:1}
+  .c-art.has-av img{display:block}
+  .c-art.has-av span{display:none}
   .c-name{font-size:25px;font-weight:900;text-align:center;letter-spacing:.04em;
     text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
     border-top:1.5px solid var(--csub);border-bottom:1.5px solid var(--csub);
@@ -319,7 +323,7 @@
               <em id="cFlag"></em>
               <i id="platGlyph">LICHESS</i>
             </div>
-            <div class="c-art"><span id="pieceArt">♞</span></div>
+            <div class="c-art" id="artBox"><img id="avatarImg" crossorigin="anonymous" alt=""><span id="pieceArt">♞</span></div>
           </div>
           <div class="c-name" id="cname"><span class="ttlchip" id="ttlchip">GM</span><span id="cnameTxt"></span></div>
           <div class="c-stats">
@@ -526,6 +530,7 @@ async function fetchLichess(u){
   const games = text.trim().split("\n").filter(Boolean).map(l => normLichess(JSON.parse(l), uname));
   return {
     platform:"lichess", username:user.username, title:user.title || null,
+    avatar:null,  // Lichess has no profile pictures — piece art stays
     lastSeen:user.seenAt ?? null,
     flag:user.profile?.flag || null, totalGames:user.count?.rated ?? user.count?.all,
     ratings:{blitz:user.perfs?.blitz?.rating, rapid:user.perfs?.rapid?.rating, bullet:user.perfs?.bullet?.rating},
@@ -547,6 +552,7 @@ async function fetchChesscom(u){
     const r = st[k]?.record; return s + (r ? r.win + r.loss + r.draw : 0); }, 0);
   return {
     platform:"chesscom", username:prof.username, title:prof.title || null,
+    avatar:prof.avatar || null,
     lastSeen:prof.last_online ? prof.last_online * 1000 : null,
     flag:(prof.country || "").split("/").pop() || null, totalGames:total,
     ratings:{blitz:st.chess_blitz?.last?.rating, rapid:st.chess_rapid?.last?.rating, bullet:st.chess_bullet?.last?.rating},
@@ -793,6 +799,14 @@ function reveal(data, card){
     ? String.fromCodePoint(...[...data.flag.toUpperCase()].map(ch => 0x1F1A5 + ch.charCodeAt(0))) : "";
   $("platGlyph").textContent = data.platform === "lichess" ? "LICHESS" : "CHESS.COM";
   $("pieceArt").textContent = card.piece;
+  // profile picture as card art (Chess.com only), piece as fallback
+  $("artBox").classList.remove("has-av");
+  if (data.avatar){
+    const img = $("avatarImg");
+    img.onload = () => $("artBox").classList.add("has-av");
+    img.onerror = () => $("artBox").classList.remove("has-av");
+    img.src = data.avatar;
+  }
   $("cardback").querySelector(".bigpc").textContent = card.piece;
   $("ttlchip").textContent = data.title || "";
   $("cnameTxt").textContent = data.username;
@@ -924,7 +938,7 @@ $("dl").onclick = async () => {
   const prevY = spinY, prevX = spinX;
   gsap.set(spin, {rotationY:0, rotationX:0, y:0});
   if (idleTween) idleTween.pause();
-  const canvas = await html2canvas($("card"), {backgroundColor:null, scale:2});
+  const canvas = await html2canvas($("card"), {backgroundColor:null, scale:2, useCORS:true});
   gsap.set(spin, {rotationY:prevY, rotationX:prevX});
   if (idleTween) idleTween.resume();
   const a = document.createElement("a");

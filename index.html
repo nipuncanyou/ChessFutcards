@@ -155,7 +155,7 @@
   /* ---------------- FUT card ---------------- */
   .cardzone{perspective:1300px;position:relative}
   #spin{position:relative;width:330px;height:512px;transform-style:preserve-3d;will-change:transform;
-    cursor:grab;display:none}
+    cursor:grab;display:none;user-select:none;-webkit-user-select:none;touch-action:none}
   #spin.grabbing{cursor:grabbing}
   #card,.cardback{position:absolute;inset:0;border-radius:26px;overflow:hidden;
     backface-visibility:hidden;-webkit-backface-visibility:hidden;
@@ -809,12 +809,13 @@ function walkout(data, card){
 
 /* -------- card reveal -------- */
 const TIER_LABEL = {bronze:"BRONZE", silver:"SILVER", gold:"GOLD", hero:"HERO", icon:"ICON", legend:"LEGEND"};
-let idleTween = null, spinY = 0, spinX = 0, curCard = null, curData = null;
+let idleTween = null, spinY = 0, spinX = 0, curCard = null, curData = null, momentum = null;
 function reveal(data, card){
   curCard = card; curData = data;
   const spin = $("spin"), c = $("card");
   spinY = 0; spinX = 0;
   if (idleTween) idleTween.kill();
+  if (momentum){ momentum.kill(); momentum = null; }  // a mid-throw old card must not steer the new one
   gsap.set(spin, {display:"block", rotationY:0, rotationX:0, y:0});
   c.className = "t-" + card.tier + (card.rare ? " rare" : "") + (card.titled ? " titled" : "");
   $("cardback").className = "cardback";
@@ -828,6 +829,7 @@ function reveal(data, card){
   $("artBox").classList.remove("has-av");
   if (data.avatar){
     const img = $("avatarImg");
+    img.draggable = false;  // don't let native image-drag hijack the card spin
     img.onload = () => $("artBox").classList.add("has-av");
     img.onerror = () => $("artBox").classList.remove("has-av");
     img.src = data.avatar;
@@ -923,7 +925,7 @@ document.addEventListener("click", e => {
 /* -------- grabbable spin physics -------- */
 {
   const spin = $("spin");
-  let dragging = false, lx = 0, ly = 0, vx = 0, momentum = null;
+  let dragging = false, lx = 0, ly = 0, vx = 0;
   const render = () => gsap.set(spin, {rotationY:spinY, rotationX:spinX});
   spin.addEventListener("pointerdown", e => {
     dragging = true; lx = e.clientX; ly = e.clientY; vx = 0; dragDist = 0;

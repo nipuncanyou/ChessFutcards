@@ -241,6 +241,23 @@
   footer a{color:var(--ink)}
 
   .spark{position:fixed;z-index:70;pointer-events:none;font-weight:900;user-select:none}
+  /* tap-a-stat modal */
+  .smodal{position:fixed;inset:0;z-index:85;display:none;align-items:center;justify-content:center;
+    background:rgba(16,16,16,.55)}
+  .smodal.open{display:flex}
+  .smbox{position:relative;background:#fff;border:2px solid var(--ink);border-radius:18px;
+    box-shadow:8px 8px 0 var(--green);max-width:400px;width:calc(100vw - 48px);
+    padding:26px 28px;animation:smpop .28s cubic-bezier(.2,1.4,.4,1)}
+  @keyframes smpop{from{transform:scale(.7) translateY(24px);opacity:0}}
+  .smx{position:absolute;top:10px;right:14px;background:none;border:0;font-size:26px;
+    cursor:pointer;color:var(--muted);font-weight:900}
+  .smbox b{font-size:56px;font-weight:900;line-height:1}
+  .smbox .smname{font-size:14px;font-weight:900;letter-spacing:.24em;color:var(--muted);
+    margin-left:10px}
+  .smbox small{display:block;font-size:11px;letter-spacing:.3em;color:var(--green-ink);
+    font-weight:900;margin:14px 0 6px}
+  .smbox p{margin:0 0 14px;font-size:16px;line-height:1.55}
+  .smbox a{color:var(--blue);font-weight:700;font-size:14px}
   .feedback{position:fixed;right:20px;bottom:20px;z-index:80;background:var(--ink);color:#fff;
     text-decoration:none;font-weight:900;font-size:14px;letter-spacing:.05em;
     padding:12px 18px;border-radius:99px;box-shadow:4px 4px 0 var(--green);transition:.15s}
@@ -341,7 +358,7 @@
       </div>
       <div class="ripple" id="ripple"></div>
     </div>
-    <div class="spin-hint" id="spinhint">GRAB THE CARD · THROW IT · IT SPINS</div>
+    <div class="spin-hint" id="spinhint">GRAB &amp; THROW TO SPIN · TAP A STAT TO SEE WHY</div>
     <div class="actions" id="actions">
       <button id="dl" class="primary">Download PNG</button>
       <button id="again">New card</button>
@@ -359,6 +376,13 @@
   </footer>
 </div>
 </div>
+<div class="smodal" id="smodal"><div class="smbox">
+  <button class="smx" id="smClose">×</button>
+  <b id="smNum">0</b><span class="smname" id="smName">SPEED</span>
+  <small>YOUR READ</small>
+  <p id="smText"></p>
+  <a href="stats.html">Full methodology for all six stats →</a>
+</div></div>
 <div id="flash"></div>
 <canvas id="burst"></canvas>
 <a class="feedback" href="mailto:arshiyaanand.works@gmail.com?subject=Chess%20Card%20%E2%80%94%20my%20review&body=Rating%20(1%E2%80%9310)%3A%20%0AWhat%20slapped%3A%20%0AWhat%20sucked%3A%20%0AWould%20you%20share%20your%20card%3F%20(y%2Fn)%3A%20">★ RATE THIS</a>
@@ -785,8 +809,9 @@ function walkout(data, card){
 
 /* -------- card reveal -------- */
 const TIER_LABEL = {bronze:"BRONZE", silver:"SILVER", gold:"GOLD", hero:"HERO", icon:"ICON", legend:"LEGEND"};
-let idleTween = null, spinY = 0, spinX = 0;
+let idleTween = null, spinY = 0, spinX = 0, curCard = null, curData = null;
 function reveal(data, card){
+  curCard = card; curData = data;
   const spin = $("spin"), c = $("card");
   spinY = 0; spinX = 0;
   if (idleTween) idleTween.kill();
@@ -846,13 +871,62 @@ function startIdle(){
   idleTween = gsap.to("#spin", {y:-10, duration:2.6, yoyo:true, repeat:-1, ease:"sine.inOut"});
 }
 
+/* -------- tap-a-stat: why is this number what it is? -------- */
+let dragDist = 0;
+function explainStat(k){
+  const c = curCard, drv = c.drv || {}, del = c.deltas || {};
+  const pc = x => Math.round(x * 100) + "%";
+  const net = x => x > 0 ? `pushed it +${x} above` : x < 0 ? `pulled it ${x} below` : "kept it level with";
+  if (k === "OVR"){
+    return c.bestRating >= 2500
+      ? `You're in the saturated top of the percentile scale, so your absolute rating (${c.bestRating}) sets your overall on the elite stretch — top ~${Math.max(0.1, Math.round((100 - c.pct) * 10) / 10)}% of the platform.`
+      : `Your best rating (${c.bestRating ?? "?"}) puts you around the ${Math.round(c.pct)}th percentile — better than roughly ${Math.round(c.pct)}% of players on the platform.`;
+  }
+  if (c.lowData) return "Mystery card: fewer than 10 recent rated games, so this stat comes from your ratings only. Play a batch of games and re-rip the pack.";
+  switch (k){
+    case "SPD": return `Your bullet strength vs your slower ratings` +
+      (drv.flagRate != null ? `, and ${pc(drv.flagRate)} of your losses being on time (baseline ~18%),` : "") +
+      ` ${net(del.SPD)} your overall.`;
+    case "ATK": return `${drv.mateRate != null ? pc(drv.mateRate) + " of your wins end in checkmate (baseline ~28%), and " : ""}` +
+      `${pc(drv.decisiveRate ?? 0)} of your games are decisive (baseline ~62%). That ${net(del.ATK)} your overall.`;
+    case "DEF": return drv.defScore == null
+      ? "Not enough recent games against higher-rated opponents to measure upset resistance, so DEF sits at your overall."
+      : `You score ${pc(drv.defScore)} against players rated above you (expected ~40%). That ${net(del.DEF)} your overall.`;
+    case "END": return drv.endDiff == null
+      ? "Not enough long games in your recent sample, so END sits at your overall."
+      : `In games past move 35 you score ${(drv.endDiff >= 0 ? "+" : "") + Math.round(drv.endDiff * 100)}% vs your normal rate. That ${net(del.END)} your overall.`;
+    case "OPN": return `You play about ${Math.round((drv.variety ?? 0) * 100)} distinct openings per 100 games (baseline ~55). That ${net(del.OPN)} your overall.`;
+    case "CON": return drv.tiltDiff == null
+      ? "Not enough post-loss games to measure tilt resistance, so CON sits at your overall."
+      : `Right after a loss you score ${(drv.tiltDiff >= 0 ? "+" : "") + Math.round(drv.tiltDiff * 100)}% vs your normal rate — ` +
+        `${drv.tiltDiff >= 0 ? "ice in the veins" : "a little tilt shows"}. That ${net(del.CON)} your overall.`;
+  }
+  return "";
+}
+function openStat(k){
+  if (!curCard) return;
+  $("smNum").textContent = k === "OVR" ? curCard.ovr : curCard.stats[k];
+  $("smName").textContent = {OVR:"OVERALL", SPD:"SPEED", ATK:"ATTACK", DEF:"DEFENSE",
+    END:"ENDGAME", OPN:"OPENINGS", CON:"CONSISTENCY"}[k];
+  $("smText").textContent = explainStat(k);
+  $("smodal").classList.add("open");
+}
+$("smClose").onclick = () => $("smodal").classList.remove("open");
+$("smodal").addEventListener("pointerdown", e => { if (e.target === $("smodal")) $("smodal").classList.remove("open"); });
+document.addEventListener("click", e => {
+  if (dragDist > 8) return;                       // it was a throw, not a tap
+  const row = e.target.closest(".srow");
+  if (row) return openStat(row.querySelector("span").textContent);
+  if (e.target.closest(".c-left")) return openStat("OVR");
+});
+
 /* -------- grabbable spin physics -------- */
 {
   const spin = $("spin");
   let dragging = false, lx = 0, ly = 0, vx = 0, momentum = null;
   const render = () => gsap.set(spin, {rotationY:spinY, rotationX:spinX});
   spin.addEventListener("pointerdown", e => {
-    dragging = true; lx = e.clientX; ly = e.clientY; vx = 0;
+    dragging = true; lx = e.clientX; ly = e.clientY; vx = 0; dragDist = 0;
     spin.classList.add("grabbing");
     spin.setPointerCapture(e.pointerId);
     if (momentum) momentum.kill();
@@ -862,6 +936,7 @@ function startIdle(){
     if (!dragging) return;
     const dx = e.clientX - lx, dy = e.clientY - ly;
     lx = e.clientX; ly = e.clientY;
+    dragDist += Math.abs(dx) + Math.abs(dy);
     spinY += dx * .55; vx = dx * .55;
     spinX = clamp(spinX - dy * .25, -28, 28);
     render();

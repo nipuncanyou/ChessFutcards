@@ -105,7 +105,7 @@
     62%,71%{transform:scaleX(.38);opacity:.15}}
 
   /* ---------------- stage / cinematic ---------------- */
-  #dim{position:fixed;inset:0;background:rgba(16,16,16,.55);opacity:0;pointer-events:none;z-index:40}
+  #dim{position:fixed;inset:0;background:rgba(16,16,16,.68);opacity:0;pointer-events:none;z-index:40}
   #shake{will-change:transform}
   #stage{position:relative;z-index:50;min-height:100vh;display:none;flex-direction:column;
     align-items:center;justify-content:center;padding:60px 0}
@@ -143,14 +143,20 @@
   .wo-line{position:absolute;top:6%;bottom:6%;width:5px;border-radius:3px;opacity:0;
     transform-origin:50% 100%;background:linear-gradient(180deg,transparent,#E8B64C 40%,#C8901A)}
   #wo1{left:4%} #wo2{right:4%}
+  /* walkout text sits on solid sticker plates — readable on ANY backdrop */
   .wo-item{position:absolute;font-weight:900;font-size:46px;letter-spacing:.03em;
-    text-align:center;opacity:0;max-width:90%;color:#fff}
-  .wo-item small{display:block;font-size:12px;letter-spacing:.34em;color:#cfcdc2;
-    margin-bottom:10px;font-weight:800}
-  .wo-item.gold{color:#FFD94E}
-  .wo-sil{position:absolute;font-size:200px;line-height:1;color:#fff;opacity:0}
-  .wo-skip{position:absolute;bottom:-38px;left:0;right:0;text-align:center;font-size:11px;
-    letter-spacing:.3em;color:#cfcdc2;font-weight:800}
+    text-align:center;opacity:0;max-width:90%;color:var(--ink);
+    background:#fff;border:2.5px solid var(--ink);border-radius:18px;
+    padding:16px 30px 20px;box-shadow:7px 7px 0 var(--green)}
+  .wo-item small{display:block;font-size:12px;letter-spacing:.34em;color:var(--muted);
+    margin-bottom:8px;font-weight:800}
+  .wo-item.gold{color:#B07A10;box-shadow:7px 7px 0 #FFD94E}
+  .wo-sil{position:absolute;font-size:200px;line-height:1;color:var(--ink);opacity:0;
+    filter:drop-shadow(0 0 26px rgba(255,255,255,.9))}
+  .wo-skip{position:absolute;bottom:-46px;left:0;right:0;text-align:center;font-size:11px;
+    letter-spacing:.3em;font-weight:800}
+  .wo-skip s{text-decoration:none;background:rgba(16,16,16,.75);color:#fff;
+    border-radius:99px;padding:6px 16px}
 
   /* ---------------- FUT card ---------------- */
   .cardzone{perspective:1300px;position:relative}
@@ -328,7 +334,7 @@
       <div class="wo-line" id="wo2"></div>
       <div class="wo-sil" id="woSil">♞</div>
       <div class="wo-item" id="woItem"></div>
-      <div class="wo-skip">CLICK TO SKIP</div>
+      <div class="wo-skip"><s>CLICK TO SKIP</s></div>
     </div>
     <div class="cardzone">
       <div id="spin">
@@ -915,12 +921,9 @@ function openStat(k){
 }
 $("smClose").onclick = () => $("smodal").classList.remove("open");
 $("smodal").addEventListener("pointerdown", e => { if (e.target === $("smodal")) $("smodal").classList.remove("open"); });
-document.addEventListener("click", e => {
-  if (dragDist > 8) return;                       // it was a throw, not a tap
-  const row = e.target.closest(".srow");
-  if (row) return openStat(row.querySelector("span").textContent);
-  if (e.target.closest(".c-left")) return openStat("OVR");
-});
+/* NOTE: taps on the card are detected in the spin release handler below —
+   pointer capture redirects click events to #spin, so a normal click
+   listener never sees the stat rows. */
 
 /* -------- grabbable spin physics -------- */
 {
@@ -943,10 +946,20 @@ document.addEventListener("click", e => {
     spinX = clamp(spinX - dy * .25, -28, 28);
     render();
   });
-  const release = () => {
+  const release = e => {
     if (!dragging) return;
     dragging = false;
     spin.classList.remove("grabbing");
+    // A still-finger release is a TAP, not a throw. Pointer capture means the
+    // browser won't deliver a click to the stat row, so hit-test manually.
+    if (dragDist < 8 && e && e.clientX != null){
+      const el = document.elementFromPoint(e.clientX, e.clientY);
+      const row = el && el.closest(".srow");
+      if (row){ openStat(row.querySelector("span").textContent); }
+      else if (el && el.closest(".c-left")){ openStat("OVR"); }
+      if (idleTween) idleTween.resume();
+      return;
+    }
     momentum = gsap.to({}, {duration:3, ease:"none", onUpdate:function(){
       vx *= .955;
       spinY += vx;

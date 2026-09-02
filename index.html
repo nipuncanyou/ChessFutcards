@@ -105,7 +105,7 @@
     62%,71%{transform:scaleX(.38);opacity:.15}}
 
   /* ---------------- stage / cinematic ---------------- */
-  #dim{position:fixed;inset:0;background:rgba(16,16,16,.68);opacity:0;pointer-events:none;z-index:40}
+  /* no screen dimming — the pack keeps the page bright */
   #shake{will-change:transform}
   #stage{position:relative;z-index:50;min-height:100vh;display:none;flex-direction:column;
     align-items:center;justify-content:center;padding:60px 0}
@@ -279,7 +279,6 @@
 </head>
 <body>
 <div class="grain"></div>
-<div id="dim"></div>
 <div id="shake">
 <div class="wrap">
   <nav>
@@ -544,20 +543,46 @@ function buildCard(o){
 /* ============================= ENGINE-END ============================= */
 
 /* ---------------- data fetching ---------------- */
-async function j(url, opt){ const r = await fetch(url, opt); if (!r.ok) throw new Error(r.status); return r.json(); }
+/* Usernames get pasted with @, spaces, or a full profile URL — clean all that
+   up, otherwise the API 404s and it looks like the site is broken. */
+function cleanName(raw){
+  let u = (raw || "").trim();
+  const m = u.match(/(?:lichess\.org\/@\/|chess\.com\/(?:member|player)\/)([^\/?#\s]+)/i);
+  if (m) u = m[1];
+  return u.replace(/^@+/, "").replace(/\s+/g, "").replace(/[\/?#].*$/, "");
+}
+class ApiError extends Error{ constructor(status){ super("api " + status); this.status = status; } }
+async function j(url, opt){
+  let r;
+  try{ r = await fetch(url, opt); }
+  catch(e){ throw new ApiError("offline"); }
+  if (!r.ok) throw new ApiError(r.status);
+  return r.json();
+}
 
 async function fetchLichess(u){
-  const user = await j(`https://lichess.org/api/user/${u}`);
+  const user = await j(`https://lichess.org/api/user/${encodeURIComponent(u)}`);
+  if (user.closed || user.disabled) throw new ApiError(404);
+  const name = encodeURIComponent(user.username);
   const livePct = {};
   for (const p of ["blitz", "rapid", "bullet"]){
-    try{ livePct[p] = (await j(`https://lichess.org/api/user/${u}/perf/${p}`)).percentile ?? null; }
+    try{ livePct[p] = (await j(`https://lichess.org/api/user/${name}/perf/${p}`)).percentile ?? null; }
     catch{ livePct[p] = null; }
   }
-  const nd = await fetch(`https://lichess.org/api/games/user/${u}?max=120&rated=true&perfType=blitz,rapid,bullet&opening=true`,
-    {headers:{Accept:"application/x-ndjson"}});
-  const text = await nd.text();
-  const uname = user.username.toLowerCase();
-  const games = text.trim().split("\n").filter(Boolean).map(l => normLichess(JSON.parse(l), uname));
+  // Games are a bonus, not a requirement: if this call fails or the account has
+  // none, we still build a ratings-only card instead of erroring out.
+  let games = [];
+  try{
+    const nd = await fetch(`https://lichess.org/api/games/user/${name}?max=120&rated=true&perfType=blitz,rapid,bullet&opening=true`,
+      {headers:{Accept:"application/x-ndjson"}});
+    if (nd.ok){
+      const text = await nd.text();
+      const uname = user.username.toLowerCase();
+      games = text.trim().split("\n").filter(Boolean)
+        .map(l => { try{ return normLichess(JSON.parse(l), uname); }catch{ return null; } })
+        .filter(Boolean);
+    }
+  }catch(e){ games = []; }
   return {
     platform:"lichess", username:user.username, title:user.title || null,
     avatar:null,  // Lichess has no profile pictures — piece art stays
@@ -569,14 +594,19 @@ async function fetchLichess(u){
 }
 
 async function fetchChesscom(u){
-  const prof = await j(`https://api.chess.com/pub/player/${u}`);
-  const st = await j(`https://api.chess.com/pub/player/${u}/stats`);
-  const arch = (await j(`https://api.chess.com/pub/player/${u}/games/archives`)).archives;
+  const name = encodeURIComponent(u.toLowerCase());
+  const prof = await j(`https://api.chess.com/pub/player/${name}`);
+  const st = await j(`https://api.chess.com/pub/player/${name}/stats`).catch(() => ({}));
+  // Games are a bonus, not a requirement — never fail the card over them.
   let raw = [];
-  for (let i = arch.length - 1; i >= 0 && i >= arch.length - 12 && raw.length < 40; i--){
-    raw = (await j(arch[i])).games.filter(g =>
-      g.rated && ["blitz","rapid","bullet"].includes(g.time_class)).concat(raw);
-  }
+  try{
+    const arch = (await j(`https://api.chess.com/pub/player/${name}/games/archives`)).archives || [];
+    for (let i = arch.length - 1; i >= 0 && i >= arch.length - 12 && raw.length < 40; i--){
+      const got = await j(arch[i]).catch(() => null);
+      if (got && got.games)
+        raw = got.games.filter(g => g.rated && ["blitz","rapid","bullet"].includes(g.time_class)).concat(raw);
+    }
+  }catch(e){ raw = []; }
   const uname = prof.username.toLowerCase();
   const total = ["chess_blitz","chess_rapid","chess_bullet"].reduce((s, k) => {
     const r = st[k]?.record; return s + (r ? r.win + r.loss + r.draw : 0); }, 0);
@@ -587,7 +617,8 @@ async function fetchChesscom(u){
     flag:(prof.country || "").split("/").pop() || null, totalGames:total,
     ratings:{blitz:st.chess_blitz?.last?.rating, rapid:st.chess_rapid?.last?.rating, bullet:st.chess_bullet?.last?.rating},
     livePct:{blitz:null, rapid:null, bullet:null},
-    games: raw.slice(-120).map(g => normChesscom(g, uname)),
+    games: raw.slice(-120).map(g => { try{ return normChesscom(g, uname); }catch{ return null; } })
+      .filter(Boolean),
   };
 }
 
@@ -680,15 +711,19 @@ let loadTimer;
 $("go").onclick = generate;
 $("uname").addEventListener("keydown", e => { if (e.key === "Enter") generate(); });
 $("again").onclick = () => {
-  gsap.to("#dim", {opacity:0, duration:.4});
   $("stage").classList.remove("show");
   window.scrollTo({top:0, behavior:"smooth"});
 };
 
+function shakeInput(msg){
+  $("err").textContent = msg;
+  gsap.fromTo("#uname", {x:-9}, {x:0, duration:.5, ease:"elastic.out(1,.3)"});
+}
+
 async function generate(){
-  const u = $("uname").value.trim();
+  const u = cleanName($("uname").value);
   $("err").textContent = "";
-  if (!u){ gsap.fromTo("#uname", {x:-8}, {x:0, duration:.4, ease:"elastic.out(1,.3)"}); return; }
+  if (!u){ shakeInput("Type a username first."); return; }
   $("stage").classList.add("show");
   $("pack").style.display = "none"; $("spin").style.display = "none";
   gsap.set(["#actions", "#spinhint"], {opacity:0});
@@ -699,6 +734,8 @@ async function generate(){
   loadTimer = setInterval(() => $("loadmsg").innerHTML = `<i>●</i> ${LOADS[++i % LOADS.length]}`, 1100);
   try{
     const data = platform === "lichess" ? await fetchLichess(u) : await fetchChesscom(u);
+    if (!data.ratings.blitz && !data.ratings.rapid && !data.ratings.bullet)
+      throw new ApiError("norating");
     const card = buildCard(data);
     try{
       localStorage.setItem("chesscards_last", JSON.stringify({
@@ -712,8 +749,16 @@ async function generate(){
   }catch(e){
     clearInterval(loadTimer); $("loadmsg").textContent = "";
     $("stage").classList.remove("show");
-    $("err").textContent = `Couldn't find "${u}" on ${platform === "lichess" ? "Lichess" : "Chess.com"} (or the API said no). Try again?`;
-    gsap.fromTo("#uname", {x:-9}, {x:0, duration:.5, ease:"elastic.out(1,.3)"});
+    const site = platform === "lichess" ? "Lichess" : "Chess.com";
+    const other = platform === "lichess" ? "Chess.com" : "Lichess";
+    const s = e && e.status;
+    let msg;
+    if (s === 404) msg = `No account called "${u}" on ${site}. Check the spelling — or switch to ${other}.`;
+    else if (s === 429) msg = `${site} is rate-limiting us. Wait about a minute and try again.`;
+    else if (s === "offline") msg = `Can't reach ${site} — check your internet connection.`;
+    else if (s === "norating") msg = `"${u}" exists but has no rated bullet, blitz or rapid games yet.`;
+    else msg = `${site} hiccuped (error ${s || "unknown"}). Try again in a moment.`;
+    shakeInput(msg);
     window.scrollTo({top:0, behavior:"smooth"});
   }
 }
@@ -730,9 +775,8 @@ function showPack(data, card){
     const r = pack.getBoundingClientRect();
     const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
     gsap.timeline()
-      /* lights down, pack takes the spotlight */
-      .to("#dim", {opacity:1, duration:.6, ease:"power2.out"})
-      .to(pack, {scale:1.12, y:-14, duration:.7, ease:"power2.inOut"}, "<")
+      /* pack rises into the spotlight — no screen dimming */
+      .to(pack, {scale:1.12, y:-14, duration:.7, ease:"power2.inOut"})
       /* slow show-off spin */
       .to(pack, {rotationY:360, duration:1.1, ease:"power2.inOut"})
       /* three escalating shakes with gold leaking out between them */
@@ -859,8 +903,7 @@ function reveal(data, card){
   tl.fromTo(spin, {y:"90vh", rotationY:45, scale:.4, opacity:0},
       {y:0, rotationY:720, scale:1, opacity:1, duration:1.25, ease:"power4.out"})
     .add(() => { burst(card.tier); shakeScreen(); }, "-=.25")
-    .to("#dim", {opacity:0, duration:.9, ease:"power2.out"}, "-=.2")
-    .fromTo("#ripple", {opacity:.9, scale:1}, {opacity:0, scale:1.35, duration:.8, ease:"power2.out"}, "-=.9")
+    .fromTo("#ripple", {opacity:.9, scale:1}, {opacity:0, scale:1.35, duration:.8, ease:"power2.out"}, "-=.7")
     .add(() => {
       const num = {v:0};
       gsap.to(num, {v:card.ovr, duration:.9, ease:"power2.out",

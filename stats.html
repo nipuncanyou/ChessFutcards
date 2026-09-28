@@ -3,7 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>How the ratings work — Chess Cards</title>
+<title>How the ratings work · Chess Cards</title>
+<meta name="description" content="The full methodology behind Chess Cards: how a Lichess or Chess.com rating becomes an overall, and how the six sub-stats are derived from your recent rated games.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23101010'/%3E%3Ctext x='50' y='50' font-size='68' text-anchor='middle' dominant-baseline='central' fill='%2300D364'%3E%E2%99%9E%3C/text%3E%3C/svg%3E">
+<meta name="theme-color" content="#140b07">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;700;800;900&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<meta property="og:title" content="How the ratings work · Chess Cards">
+<meta property="og:description" content="The full methodology behind every number on the card.">
+<meta property="og:image" content="https://nipuncanyou.github.io/ChessFutcards/og.png">
+<meta name="twitter:card" content="summary_large_image">
 <style>
   :root{
     --paper:#FAFAF7; --ink:#101010; --muted:#6d6d66; --line:#E6E4DA;
@@ -55,6 +65,35 @@
 
   footer{margin-top:70px;color:var(--muted);font-size:13px;border-top:1px solid var(--line);padding-top:16px}
   footer a{color:var(--ink)}
+
+  /* paper look, matching the main page: warm paper, ink, one moss accent.
+     No shadows, no rounded corners, no stripes, flat colours. */
+  *,*::before,*::after{box-shadow:none !important;text-shadow:none !important;border-radius:0 !important}
+  html{background:#fbfbf9;color-scheme:light}
+  body{background:#fbfbf9;color:#1b1a16;font-family:"Archivo",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+  ::selection{background:#2f5d3a;color:#fbfbf9}
+  .brand{font-weight:800;font-size:18px;letter-spacing:.06em}
+  .brand em{color:#2f5d3a}
+  nav a{color:#1b1a16;border-bottom:1px solid #1b1a16}
+  h1{font-weight:900;letter-spacing:-.025em;font-size:clamp(34px,6.4vw,64px);line-height:1.02;text-wrap:balance}
+  h1 span{color:#2f5d3a}
+  .lede{color:#3f3c35}
+  .youbox{background:#fbfbf9;border:1px solid #1b1a16;color:#1b1a16}
+  .youbox .tierword{color:#2f5d3a}
+  section{border-top:1px solid rgba(27,26,22,.16);padding-top:26px}
+  section h2{font-weight:800;letter-spacing:-.015em;font-size:26px}
+  section p{color:#3f3c35}
+  section .how{color:#5f5b51;border-left:0;padding-left:0;font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:13.5px}
+  .chip,.c-spd,.c-atk,.c-def,.c-end,.c-opn,.c-con,.c-ovr{background:#1b1a16;color:#fbfbf9;font-family:"IBM Plex Mono",ui-monospace,monospace;font-weight:600}
+  .mine{background:#fbfbf9;border:1px solid rgba(27,26,22,.3);color:#1b1a16}
+  .mine .d-up{color:#2f5d3a} .mine .d-dn{color:#b3261e}
+  .tcard{border:1px solid rgba(0,0,0,.25)}
+  .tz-bronze{background:#8a5e32;color:#f8e7d4} .tz-silver{background:#a3adba;color:#20242a} .tz-gold{background:#d6b44a;color:#3d2c05}
+  .tz-hero{background:#8e1b4f;color:#fff3f8} .tz-icon{background:#e8dbb6;color:#463305} .tz-legend{background:#18234c;color:#ffe9a8}
+  .tz-titled{background:transparent;color:#1b1a16;border:2px solid #b8902c}
+  footer{color:#5f5b51;border-top-color:rgba(27,26,22,.16)}
+  footer a{color:#1b1a16}
+  a{color:#2f5d3a}
 </style>
 </head>
 <body>
@@ -65,19 +104,17 @@
   </nav>
 
   <h1>HOW THE <span>RATINGS</span> WORK</h1>
-  <p class="lede">No black box. Every number on your card comes from your public games and
-  ratings — here's exactly how, and if you've generated a card, exactly why yours came out
-  the way it did.</p>
+  <p class="lede">Every number on your card comes from your public games and ratings. This page
+  shows how each one is worked out, and if you've generated a card, why yours came out the way it did.</p>
   <div class="youbox" id="youbox"></div>
 
   <section id="s-ovr">
     <h2><span class="chip c-ovr">OVR</span> Overall</h2>
-    <p>Your overall is calibrated to <b>percentiles</b> — how you rank against everyone on your
-    platform, not just your rating number. A 75 means roughly "clearly better than most people
-    on the site", not "75% of a grandmaster".</p>
+    <p>Your overall is calibrated to <b>percentiles</b>: how you rank against everyone on your
+    platform. A 75 means roughly "clearly better than most people on the site".</p>
     <p>At the very top the percentile scale saturates (everyone elite is 99.9th percentile), so
     above 93 the scale switches to <b>absolute rating</b>. That's why a 3400-rated super-GM gets
-    a 99 while a strong titled streamer lands 93–94 — no more everyone-is-96 ties.</p>
+    a 99 while a strong titled streamer lands 93–94, so the elite don't all tie on 96.</p>
     <p class="how">Formula: best of blitz/rapid percentile → 40–93; ratings above ~2500 stretch
     93→99 by absolute rating. Lichess percentiles come live from the Lichess API; Chess.com uses
     an approximate distribution.</p>
@@ -87,16 +124,16 @@
   <section>
     <h2>Tiers &amp; rarity</h2>
     <p>Card look follows FUT conventions: bronze under 65, silver 65–74, gold 75 and up. The
-    shinier <b>rare</b> finish goes to the top of each tier and to every titled player.
+    <b>rare</b> finish goes to the top of each tier and to every titled player.
     Special cards override the base tiers.</p>
     <div class="tiers">
       <div class="tcard tz-bronze">BRONZE<small>OVR under 65 · rare finish at 58+</small></div>
       <div class="tcard tz-silver">SILVER<small>OVR 65–74 · rare finish at 71+</small></div>
       <div class="tcard tz-gold">GOLD<small>OVR 75–96 · rare finish at 85+</small></div>
-      <div class="tcard tz-hero">HERO<small>OVR 97+ and active — the world's best</small></div>
+      <div class="tcard tz-hero">HERO<small>OVR 97+ and still active: the world's best</small></div>
       <div class="tcard tz-icon">ICON<small>account inactive for 1+ year</small></div>
       <div class="tcard tz-legend">LEGEND<small>account inactive for 5+ years</small></div>
-      <div class="tcard tz-titled">TITLED GLOW<small>GM/IM/FM etc. — gold frame on any tier</small></div>
+      <div class="tcard tz-titled">TITLED<small>GM, IM, FM and other titles get a gold frame on any tier</small></div>
     </div>
   </section>
 
@@ -129,7 +166,7 @@
   <section id="s-end">
     <h2><span class="chip c-end">END</span> Endgame</h2>
     <p>Do long games favor you? Compares your score in games past move 35 against your overall
-    score — grinders go up, players who thrive on quick chaos go down.</p>
+    score. Grinders go up; players who thrive on quick chaos go down.</p>
     <p class="how">Score in 70+ ply games minus overall score. Needs 8+ long games.</p>
     <div class="mine" id="m-end"></div>
   </section>
@@ -151,11 +188,11 @@
   </section>
 
   <section>
-    <h2>The honest caveats</h2>
-    <p>Sub-stats flex a few points around your overall (±7) — they show <b>style</b>, not
-    independent skills. Accounts with fewer than 10 recent rated games get a ratings-only
-    "mystery card". Chess.com percentiles are approximate. This is a fan project for fun, not a
-    FIDE instrument.</p>
+    <h2>Limits</h2>
+    <p>Sub-stats move a few points around your overall (±7), so they describe your <b>style</b>
+    more than separate skills. Accounts with fewer than 10 recent rated games get a ratings-only
+    "mystery card". Chess.com percentiles are approximate. This is a fan project made for fun,
+    and it isn't an official rating.</p>
   </section>
 
   <footer>
@@ -174,7 +211,7 @@ if (d && d.stats){
   const pc = x => Math.round(x * 100) + "%";
   $("youbox").style.display = "block";
   $("youbox").innerHTML = `Showing the breakdown for <b>${d.username}</b> (${d.platform === "lichess" ? "Lichess" : "Chess.com"})
-    — <b>${d.ovr} OVR</b>, <span class="tierword">${d.tier.toUpperCase()}${d.rare && ["bronze","silver","gold"].includes(d.tier) ? " RARE" : ""}</span>${d.title ? " · " + d.title : ""}.
+    : <b>${d.ovr} OVR</b>, <span class="tierword">${d.tier.toUpperCase()}${d.rare && ["bronze","silver","gold"].includes(d.tier) ? " RARE" : ""}</span>${d.title ? " · " + d.title : ""}.
     Generate a new card any time and this page updates.`;
 
   const drv = d.drv || {}, del = d.deltas || {};
@@ -184,7 +221,7 @@ if (d && d.stats){
     ? `<b>Your OVR ${d.ovr}:</b> you're in the saturated top of the percentile scale, so your
        absolute rating (<b>${d.bestRating}</b>) sets it on the elite stretch. Top ~${Math.max(0.1, Math.round((100 - d.pct) * 10) / 10)}% of the platform.`
     : `<b>Your OVR ${d.ovr}:</b> your best rating (<b>${d.bestRating ?? "?"}</b>) puts you around the
-       <b>${pctTxt(d.pct)}th percentile</b> — better than roughly ${pctTxt(d.pct)}% of players on ${d.platform === "lichess" ? "Lichess" : "Chess.com"}.`);
+       <b>${pctTxt(d.pct)}th percentile</b>, better than roughly ${pctTxt(d.pct)}% of players on ${d.platform === "lichess" ? "Lichess" : "Chess.com"}.`);
 
   if (d.lowData){
     for (const k of ["spd","atk","def","end","opn","con"])
@@ -211,8 +248,8 @@ if (d && d.stats){
     mine("m-con", del.CON === 0 && drv.tiltDiff == null
       ? `<b>Your CON ${d.stats.CON}:</b> not enough post-loss games to measure tilt, so CON sits at your overall.`
       : `<b>Your CON ${d.stats.CON}</b> (${sign(del.CON)}): right after a loss you score
-         <b>${(drv.tiltDiff >= 0 ? "+" : "") + Math.round(drv.tiltDiff * 100)}%</b> vs your normal rate —
-         ${drv.tiltDiff >= 0 ? "ice in the veins" : "a little tilt shows"}.`);
+         <b>${(drv.tiltDiff >= 0 ? "+" : "") + Math.round(drv.tiltDiff * 100)}%</b> vs your normal rate.
+         ${drv.tiltDiff >= 0 ? "Ice in the veins." : "A little tilt shows."}`);
   }
 }
 </script>

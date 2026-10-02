@@ -95,6 +95,21 @@
   .scatter b.tint{color:#BFEFD6}
   .scatter b.obj{filter:grayscale(1);opacity:.35}
 
+  /* hero background jumpers (paper skin) */
+  .jumpers{position:absolute;inset:0;pointer-events:none;z-index:-1;overflow:hidden;display:none}
+  html[data-skin="paper"] .jumpers{display:block}
+  .jumpers b{position:absolute;font-weight:400;font-size:var(--js,34px);line-height:1;
+    color:rgba(27,26,22,.12);transform-origin:50% 100%;will-change:transform;
+    animation:heroJump var(--jdur,3.4s) cubic-bezier(.3,.7,.3,1) var(--jd,0s) infinite}
+  .jumpers b.tint{color:rgba(47,93,58,.22)}
+  @keyframes heroJump{
+    0%,58%,100%{transform:translateY(0) scaleY(1) scaleX(1)}
+    64%{transform:translateY(0) scaleY(.84) scaleX(1.1)}
+    78%{transform:translateY(-20px) scaleY(1.06) scaleX(.96)}
+    90%{transform:translateY(0) scaleY(.9) scaleX(1.07)}
+    96%{transform:translateY(-4px) scaleY(1) scaleX(1)}}
+  @media (prefers-reduced-motion: reduce){ .jumpers b{animation:none} }
+
   /* pawn parade v2 — weight, lean, footfall squash */
   .parade{position:absolute;left:-24px;right:-24px;bottom:0;height:110px;pointer-events:none;overflow:hidden;
     -webkit-mask-image:linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent);
@@ -1200,6 +1215,18 @@
 
   <section class="hero">
     <div class="scatter" id="scatter"></div>
+    <div class="jumpers" aria-hidden="true">
+      <b style="left:6%;top:16%;--jd:-.2s;--jdur:3.2s;--js:30px">&#9823;</b>
+      <b class="tint" style="left:14%;top:64%;--jd:-1.4s;--jdur:3.8s;--js:40px">&#9822;</b>
+      <b style="left:27%;top:28%;--jd:-.8s;--jdur:3.5s;--js:26px">&#9821;</b>
+      <b style="left:43%;top:74%;--jd:-2.1s;--jdur:4.1s;--js:34px">&#9820;</b>
+      <b style="left:58%;top:20%;--jd:-.5s;--jdur:3.0s;--js:28px">&#9823;</b>
+      <b class="tint" style="left:71%;top:60%;--jd:-1.8s;--jdur:3.7s;--js:46px">&#9819;</b>
+      <b style="left:84%;top:32%;--jd:-1.0s;--jdur:3.3s;--js:32px">&#9818;</b>
+      <b style="left:91%;top:72%;--jd:-2.6s;--jdur:4.0s;--js:30px">&#9822;</b>
+      <b style="left:36%;top:10%;--jd:-3.0s;--jdur:3.6s;--js:24px">&#9823;</b>
+      <b style="left:52%;top:48%;--jd:-2.3s;--jdur:3.9s;--js:28px">&#9821;</b>
+    </div>
     <div class="hero-grid">
     <div class="hero-copy">
     <div class="kicker"><i></i>LIVE FROM YOUR REAL GAMES</div>
